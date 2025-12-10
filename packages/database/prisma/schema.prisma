@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User tiers for rate limiting and features
+enum Tier {
+  FREE
+  PRO
+  TEAM
+  ENTERPRISE
+}
+
+// Supported networks
+enum Network {
+  MAINNET
+  TESTNET
+  DEVNET
+}
+
+// Alert condition types
+enum AlertConditionType {
+  TX_FAILED
+  BALANCE_THRESHOLD
+  EVENT_EMITTED
+  GAS_SPIKE
+}
+
+// Notification channel types
+enum ChannelType {
+  DISCORD
+  SLACK
+  TELEGRAM
+  WEBHOOK
+}
+
+// Threshold comparison operators
+enum ThresholdOperator {
+  GT   // Greater than
+  LT   // Less than
+  EQ   // Equal to
+  GTE  // Greater than or equal
+  LTE  // Less than or equal
+}
+
+// User model (for future auth, currently not used in MVP)
+model User {
+  id            String       @id @default(cuid())
+  email         String?      @unique
+  walletAddress String?      @unique @map("wallet_address")
+  name          String?
+  tier          Tier         @default(FREE)
+
+  simulations   Simulation[]
+  alerts        Alert[]
+
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// Simulation model for storing transaction simulation results
+model Simulation {
+  id            String    @id @default(cuid())
+  shareId       String    @unique @default(cuid()) @map("share_id")
+
+  // Owner (nullable for anonymous simulations)
+  userId        String?   @map("user_id")
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Request parameters
+  network       Network
+  sender        String?
+  functionName  String    @map("function_name")  // Full path: 0x1::coin::transfer
+  typeArguments String[]  @map("type_arguments")
+  arguments     Json      @default("[]")
+  maxGasAmount  Int       @default(100000) @map("max_gas_amount")
+  gasUnitPrice  Int       @default(100) @map("gas_unit_price")
+
+  // Response data
+  success       Boolean
+  gasUsed       Int?      @map("gas_used")
+  gasBreakdown  Json?     @map("gas_breakdown")  // { computation: number, storage: number }
+  stateChanges  Json?     @map("state_changes")  // StateChange[]
+  events        Json?                            // Event[]
+  error         Json?                            // SimulationError | null
+  rawResponse   Json?     @map("raw_response")   // Full VM response for debugging
+
+  // Metadata
+  createdAt     DateTime  @default(now()) @map("created_at")
+  expiresAt     DateTime  @map("expires_at")
+
+  @@index([userId])
+  @@index([shareId])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("simulations")
+}
+
+// Alert model for monitoring on-chain conditions
+model Alert {
+  id              String             @id @default(cuid())
+  userId          String             @map("user_id")
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name            String
+  enabled         Boolean            @default(true)
+  network         Network            @default(TESTNET)
+
+  // Condition configuration
+  conditionType   AlertConditionType @map("condition_type")
+  conditionConfig Json               @map("condition_config")  // Type-specific config
+
+  // Notification settings
+  channels        NotificationChannel[]
+  cooldownSeconds Int                @default(60) @map("cooldown_seconds")
+
+  // Statistics
+  lastTriggeredAt DateTime?          @map("last_triggered_at")
+  triggerCount    Int                @default(0) @map("trigger_count")
+
+  // History
+  triggers        AlertTrigger[]
+
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([conditionType])
+  @@index([enabled])
+  @@map("alerts")
+}
+
+// Notification channel configuration for alerts
+model NotificationChannel {
+  id          String      @id @default(cuid())
+  alertId     String      @map("alert_id")
+  alert       Alert       @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  type        ChannelType
+  config      Json        // Channel-specific configuration (webhookUrl, botToken, etc.)
+  enabled     Boolean     @default(true)
+
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@index([alertId])
+  @@map("notification_channels")
+}
+
+// Alert trigger history for tracking when alerts fired
+model AlertTrigger {
+  id                  String   @id @default(cuid())
+  alertId             String   @map("alert_id")
+  alert               Alert    @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  // Event that triggered the alert
+  eventData           Json     @map("event_data")
+  transactionHash     String?  @map("transaction_hash")
+
+  // Notification results
+  notificationsSent   String[] @map("notifications_sent")  // Channel types that succeeded
+  notificationErrors  Json?    @map("notification_errors") // Errors by channel
+
+  triggeredAt         DateTime @default(now()) @map("triggered_at")
+
+  @@index([alertId])
+  @@index([triggeredAt])
+  @@map("alert_triggers")
+}
