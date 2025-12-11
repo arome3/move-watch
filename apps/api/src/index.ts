@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import simulateRouter from './routes/simulate.js';
 import alertsRouter from './routes/alerts.js';
+import monitoringRouter from './routes/monitoring.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -38,6 +39,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/v1', simulateRouter);
 app.use('/v1/alerts', alertsRouter);
+app.use('/v1/monitoring', monitoringRouter);
 
 // Global error handler
 app.use(
@@ -74,27 +76,37 @@ app.use((req, res) => {
 // Start server
 app.listen(PORT, () => {
   console.log(`
-╔════════════════════════════════════════════════════════════╗
-║                                                            ║
-║   MoveWatch API Server                                     ║
-║   Running on http://localhost:${PORT}                       ║
-║                                                            ║
-║   Simulation Endpoints:                                    ║
-║   - POST /v1/simulate         Simulate transaction         ║
-║   - GET  /v1/sim/:id          Get shared simulation        ║
-║                                                            ║
-║   Alert Endpoints:                                         ║
-║   - GET    /v1/alerts         List alerts                  ║
-║   - POST   /v1/alerts         Create alert                 ║
-║   - GET    /v1/alerts/:id     Get alert                    ║
-║   - PATCH  /v1/alerts/:id     Update alert                 ║
-║   - DELETE /v1/alerts/:id     Delete alert                 ║
-║   - POST   /v1/alerts/:id/test    Test notifications       ║
-║   - GET    /v1/alerts/:id/triggers Get trigger history     ║
-║                                                            ║
-║   Health: GET /health                                      ║
-║                                                            ║
-╚════════════════════════════════════════════════════════════╝
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║   MoveWatch API Server                                         ║
+║   Running on http://localhost:${PORT}                           ║
+║                                                                ║
+║   Simulation Endpoints:                                        ║
+║   - POST /v1/simulate             Simulate transaction         ║
+║   - GET  /v1/sim/:id              Get shared simulation        ║
+║                                                                ║
+║   Alert Endpoints:                                             ║
+║   - GET    /v1/alerts             List alerts                  ║
+║   - POST   /v1/alerts             Create alert                 ║
+║   - GET    /v1/alerts/:id         Get alert                    ║
+║   - PATCH  /v1/alerts/:id         Update alert                 ║
+║   - DELETE /v1/alerts/:id         Delete alert                 ║
+║   - POST   /v1/alerts/:id/test    Test notifications           ║
+║   - GET    /v1/alerts/:id/triggers Get trigger history         ║
+║                                                                ║
+║   Monitoring Endpoints:                                        ║
+║   - GET    /v1/monitoring/stats       Dashboard statistics     ║
+║   - GET    /v1/monitoring/transactions Transaction list        ║
+║   - GET    /v1/monitoring/transactions/:hash Transaction detail║
+║   - GET    /v1/monitoring/events      Event stream             ║
+║   - GET    /v1/monitoring/gas         Gas analytics            ║
+║   - GET    /v1/monitoring/contracts   Watched contracts        ║
+║   - POST   /v1/monitoring/contracts   Add watched contract     ║
+║   - DELETE /v1/monitoring/contracts/:id Remove contract        ║
+║                                                                ║
+║   Health: GET /health                                          ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
   `);
 });
 

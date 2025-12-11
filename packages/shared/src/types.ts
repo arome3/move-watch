@@ -256,3 +256,151 @@ export interface NotificationPayload {
   timestamp: string;
   link: string;
 }
+
+// ============================================================================
+// MONITORING DASHBOARD TYPES
+// ============================================================================
+
+// Dashboard time period selection
+export type DashboardPeriod = '24h' | '7d' | '30d';
+
+// Dashboard overview statistics
+export interface DashboardStats {
+  period: DashboardPeriod;
+  transactions: {
+    total: number;
+    success: number;
+    failed: number;
+    successRate: number;
+    trend: number; // percentage change from previous period
+  };
+  gas: {
+    total: number;
+    average: number;
+    p95: number;
+    trend: number; // percentage change from previous period
+  };
+  alerts: {
+    active: number;
+    triggered: number;
+  };
+}
+
+// Transaction list item (for table view)
+export interface TransactionListItem {
+  hash: string;
+  version: string;
+  network: Network;
+  moduleAddress: string;
+  functionName: string;
+  success: boolean;
+  vmStatus?: string;
+  gasUsed: number;
+  sender: string;
+  timestamp: string;
+}
+
+// Transaction detail (for expanded view)
+export interface TransactionDetail extends TransactionListItem {
+  sequenceNumber: number;
+  events: EventListItem[];
+}
+
+// Event list item
+export interface EventListItem {
+  eventType: string;
+  data: unknown;
+  sequenceNumber: number;
+  timestamp: string;
+  transactionHash?: string;
+}
+
+// Gas analytics data
+export interface GasAnalytics {
+  period: DashboardPeriod;
+  dataPoints: Array<{
+    timestamp: string;
+    average: number;
+    min: number;
+    max: number;
+    count: number;
+  }>;
+  stats: {
+    min: number;
+    max: number;
+    average: number;
+    p95: number;
+    total: number;
+  };
+  byFunction: Array<{
+    functionName: string;
+    moduleAddress: string;
+    totalGas: number;
+    avgGas: number;
+    count: number;
+  }>;
+  anomalies: Array<{
+    timestamp: string;
+    gasUsed: number;
+    transactionHash: string;
+    functionName: string;
+  }>;
+}
+
+// ============================================================================
+// WATCHED CONTRACT TYPES
+// ============================================================================
+
+// Watched contract response
+export interface WatchedContractResponse {
+  id: string;
+  moduleAddress: string;
+  name: string | null;
+  network: Network;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Create watched contract request
+export interface CreateWatchedContractRequest {
+  moduleAddress: string;
+  name?: string;
+  network: Network;
+}
+
+// ============================================================================
+// PAGINATED RESPONSES
+// ============================================================================
+
+// Paginated transactions response
+export interface PaginatedTransactionsResponse {
+  transactions: TransactionListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// Paginated events response
+export interface PaginatedEventsResponse {
+  events: EventListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// Transaction filter options
+export interface TransactionFilterOptions {
+  moduleAddress?: string;
+  status?: 'success' | 'failed';
+  search?: string;
+  limit?: number;
+  offset?: number;
+}
+
+// Event filter options
+export interface EventFilterOptions {
+  moduleAddress?: string;
+  eventType?: string;
+  limit?: number;
+  offset?: number;
+}
