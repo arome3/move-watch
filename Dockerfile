@@ -43,11 +43,20 @@ RUN pnpm --filter @movewatch/api build
 # Production stage
 FROM node:18.18.0-slim AS runner
 
-# Install runtime dependencies for isolated-vm and Prisma
+# Install runtime dependencies for isolated-vm, Prisma, and Aptos CLI
 RUN apt-get update && apt-get install -y \
     libstdc++6 \
     openssl \
+    curl \
+    python3 \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Aptos CLI for detailed gas profiling
+RUN curl -fsSL "https://aptos.dev/scripts/install_cli.py" | python3 && \
+    mv /root/.local/bin/aptos /usr/local/bin/aptos && \
+    chmod +x /usr/local/bin/aptos && \
+    aptos --version
 
 RUN npm install -g pnpm@8.15.0
 
