@@ -43,9 +43,10 @@ RUN pnpm --filter @movewatch/api build
 # Production stage
 FROM node:18.18.0-slim AS runner
 
-# Install runtime dependencies for isolated-vm
+# Install runtime dependencies for isolated-vm and Prisma
 RUN apt-get update && apt-get install -y \
     libstdc++6 \
+    openssl \
     && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g pnpm@8.15.0
