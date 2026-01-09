@@ -36,6 +36,7 @@ COPY packages/shared ./packages/shared
 RUN pnpm --filter @movewatch/database db:generate
 
 # Build all packages
+RUN pnpm --filter @movewatch/database build
 RUN pnpm --filter @movewatch/shared build
 RUN pnpm --filter @movewatch/api build
 
