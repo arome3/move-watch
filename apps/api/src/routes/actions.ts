@@ -10,7 +10,9 @@ import { prisma } from '../lib/prisma.js';
 import { requireAuth, type AuthenticatedRequest } from '../middleware/auth.js';
 import { rateLimiters } from '../middleware/rateLimit.js';
 // Note: Actions use subscription-based access, not x402 micropayments
-import { nanoid } from 'nanoid';
+
+// Simple nanoid replacement using crypto
+const nanoid = (size = 21) => crypto.randomBytes(size).toString('base64url').slice(0, size);
 import {
   actionTemplates,
   getTemplateById,

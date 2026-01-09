@@ -16,8 +16,11 @@
  */
 
 import type { Response, NextFunction } from 'express';
-import { nanoid } from 'nanoid';
+import crypto from 'crypto';
 import type { AuthenticatedRequest } from './auth.js';
+
+// Simple nanoid replacement using crypto
+const nanoid = (size = 21) => crypto.randomBytes(size).toString('base64url').slice(0, size);
 import type { PaymentRequired, PaymentResponse } from '@movewatch/shared';
 import { verifyPayment, settlePayment } from '../services/x402Facilitator.js';
 import { checkUsageQuota, incrementUsage } from '../services/usageTracker.js';

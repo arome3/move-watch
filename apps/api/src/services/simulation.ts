@@ -1,5 +1,8 @@
 import { Account, Ed25519PrivateKey, Ed25519PublicKey, Aptos } from '@aptos-labs/ts-sdk';
-import { nanoid } from 'nanoid';
+import crypto from 'crypto';
+
+// Simple nanoid replacement using crypto
+const nanoid = (size = 21) => crypto.randomBytes(size).toString('base64url').slice(0, size);
 import type { Prisma } from '@movewatch/database';
 import {
   type SimulationRequest,
