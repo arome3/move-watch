@@ -36,6 +36,11 @@ declare module 'next-auth/jwt' {
   }
 }
 
+// Debug logging helper
+const logAuth = (context: string, data: unknown) => {
+  console.log(`[NextAuth:${context}]`, JSON.stringify(data, null, 2));
+};
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   session: {
@@ -46,6 +51,8 @@ export const authOptions: NextAuthOptions = {
     signIn: '/auth/signin',
     error: '/auth/error',
   },
+  // Enable debug logging in all environments for troubleshooting
+  debug: true,
   providers: [
     // GitHub OAuth provider
     ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET
@@ -137,12 +144,21 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
+      logAuth('jwt:start', {
+        hasUser: !!user,
+        hasAccount: !!account,
+        provider: account?.provider,
+        tokenId: token?.id,
+        userId: user?.id
+      });
+
       // Initial sign in
       if (user) {
         token.id = user.id;
         token.walletAddress = user.walletAddress;
         token.tier = (user.tier || 'free').toLowerCase();
+        logAuth('jwt:userSet', { tokenId: token.id, tier: token.tier });
       }
 
       // For wallet provider, ensure we have the user ID
@@ -150,9 +166,12 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
       }
 
+      logAuth('jwt:end', { tokenId: token.id });
       return token;
     },
     async session({ session, token }) {
+      logAuth('session:start', { hasToken: !!token, tokenId: token?.id });
+
       if (token && session.user) {
         session.user.id = token.id;
         session.user.walletAddress = token.walletAddress;
@@ -175,37 +194,78 @@ export const authOptions: NextAuthOptions = {
             .setIssuedAt()
             .setExpirationTime('30d')
             .sign(secret);
+          logAuth('session:jwtSigned', { success: true });
         } catch (e) {
+          logAuth('session:jwtError', { error: String(e) });
           console.error('Failed to sign JWT for session:', e);
         }
       }
 
       return session;
     },
-    async signIn({ user, account }) {
-      // Allow wallet sign in always
-      if (account?.provider === 'wallet') {
-        return true;
-      }
+    async signIn({ user, account, profile, email, credentials }) {
+      logAuth('signIn:start', {
+        provider: account?.provider,
+        userId: user?.id,
+        userEmail: user?.email,
+        profileEmail: (profile as { email?: string })?.email,
+        hasCredentials: !!credentials
+      });
 
-      // For email provider, allow all verified emails
-      if (account?.provider === 'email') {
-        return true;
-      }
+      try {
+        // Allow wallet sign in always
+        if (account?.provider === 'wallet') {
+          logAuth('signIn:wallet', { allowed: true });
+          return true;
+        }
 
-      // For OAuth providers (GitHub, Google), allow sign in
-      if (account?.provider === 'github' || account?.provider === 'google') {
-        return true;
-      }
+        // For email provider, allow all verified emails
+        if (account?.provider === 'email') {
+          logAuth('signIn:email', { allowed: true });
+          return true;
+        }
 
-      return true;
+        // For OAuth providers (GitHub, Google), allow sign in
+        if (account?.provider === 'github' || account?.provider === 'google') {
+          logAuth('signIn:oauth', { provider: account.provider, allowed: true });
+          return true;
+        }
+
+        logAuth('signIn:default', { allowed: true });
+        return true;
+      } catch (error) {
+        logAuth('signIn:error', { error: String(error) });
+        console.error('SignIn callback error:', error);
+        return false;
+      }
     },
   },
   events: {
     async createUser({ user }) {
-      // New user created - could send welcome email or trigger onboarding
+      logAuth('event:createUser', { userId: user.id, email: user.email });
       console.log('New user created:', user.id);
     },
+    async signIn({ user, account, isNewUser }) {
+      logAuth('event:signIn', { userId: user?.id, provider: account?.provider, isNewUser });
+    },
+    async linkAccount({ user, account }) {
+      logAuth('event:linkAccount', { userId: user?.id, provider: account?.provider });
+    },
+    async signOut(message) {
+      logAuth('event:signOut', { message });
+    },
   },
-  debug: process.env.NODE_ENV === 'development',
+  logger: {
+    error(code, metadata) {
+      logAuth('logger:error', { code, metadata });
+      console.error('[NextAuth Error]', code, metadata);
+    },
+    warn(code) {
+      logAuth('logger:warn', { code });
+      console.warn('[NextAuth Warning]', code);
+    },
+    debug(code, metadata) {
+      logAuth('logger:debug', { code, metadata });
+    },
+  },
 };
