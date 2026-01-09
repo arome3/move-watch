@@ -85,9 +85,9 @@ async function pollLoop(): Promise<void> {
   const lastBlockKey = `${LAST_BLOCK_KEY_PREFIX}${network}`;
 
   // Get last processed block from Redis
-  const lastBlockStr = await redis.get(lastBlockKey);
-  if (lastBlockStr) {
-    lastBlockHeight = parseInt(lastBlockStr, 10);
+  const lastBlockRaw = await redis.get(lastBlockKey);
+  if (lastBlockRaw) {
+    lastBlockHeight = parseInt(String(lastBlockRaw), 10);
   } else {
     // Start from current block if no history
     lastBlockHeight = await getCurrentBlockHeight();

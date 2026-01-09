@@ -78,7 +78,8 @@ export class EventIndexer {
     const lastProcessedKey = `${LAST_PROCESSED_KEY_PREFIX}${this.network}`;
 
     // Get last processed version
-    const lastVersionStr = await redis.get(lastProcessedKey);
+    const lastVersionRaw = await redis.get(lastProcessedKey);
+    const lastVersionStr = lastVersionRaw ? String(lastVersionRaw) : null;
     const lastVersion = lastVersionStr ? BigInt(lastVersionStr) : BigInt(0);
 
     // Fetch transactions starting from last processed version
@@ -177,7 +178,8 @@ export class EventIndexer {
       const currentBlockHeight = parseInt(ledgerInfo.block_height, 10);
 
       // Get last processed block height
-      const lastBlockStr = await redis.get(lastBlockKey);
+      const lastBlockRaw = await redis.get(lastBlockKey);
+      const lastBlockStr = lastBlockRaw ? String(lastBlockRaw) : null;
       const lastProcessedBlock = lastBlockStr ? parseInt(lastBlockStr, 10) : currentBlockHeight - 1;
 
       // Process any new blocks

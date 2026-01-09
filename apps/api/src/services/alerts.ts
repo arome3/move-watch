@@ -308,8 +308,7 @@ export async function acquireCooldown(alertId: string, seconds: number): Promise
   const result = await redis.set(
     cooldownKey,
     Date.now().toString(),
-    'EX', seconds,
-    'NX'
+    { ex: seconds, nx: true }
   );
 
   return result === 'OK';
@@ -385,7 +384,11 @@ export async function getActiveAlerts(network: 'mainnet' | 'testnet' | 'devnet')
   try {
     const cached = await redis.get(cacheKey);
     if (cached) {
-      return JSON.parse(cached);
+      // Handle both string and already-parsed object from Upstash
+      if (typeof cached === 'string') {
+        return JSON.parse(cached);
+      }
+      return cached;
     }
   } catch (error) {
     // Cache miss or error, proceed to database

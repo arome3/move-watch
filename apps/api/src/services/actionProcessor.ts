@@ -77,30 +77,36 @@ export async function queueExecution(
 }
 
 /**
- * Dequeue next job for processing (blocking)
+ * Dequeue next job for processing (non-blocking)
  * Moves job to processing queue for reliability
  */
 export async function dequeueExecution(
-  timeoutSeconds: number = 30
+  _timeoutSeconds: number = 30
 ): Promise<ExecutionJob | null> {
-  // BRPOPLPUSH: atomically pop from pending and push to processing
-  // This provides at-least-once delivery semantics
-  const result = await redis.brpoplpush(
+  // LMOVE: atomically move from pending to processing
+  // right from source (oldest), left to destination (newest)
+  const result = await redis.lmove(
     EXECUTION_QUEUE_KEY,
     PROCESSING_QUEUE_KEY,
-    timeoutSeconds
+    'right',
+    'left'
   );
 
   if (!result) {
-    return null; // Timeout, no jobs available
+    return null; // No jobs available
   }
 
   try {
-    return JSON.parse(result) as ExecutionJob;
+    // Upstash may return parsed object or string
+    if (typeof result === 'string') {
+      return JSON.parse(result) as ExecutionJob;
+    }
+    return result as ExecutionJob;
   } catch (error) {
     console.error('[ActionProcessor] Failed to parse job:', result);
     // Remove invalid job from processing queue
-    await redis.lrem(PROCESSING_QUEUE_KEY, 1, result);
+    const resultStr = typeof result === 'string' ? result : JSON.stringify(result);
+    await redis.lrem(PROCESSING_QUEUE_KEY, 1, resultStr);
     return null;
   }
 }

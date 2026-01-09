@@ -125,7 +125,7 @@ async function getBalanceWithCache(
   try {
     const cached = await redis.get(cacheKey);
     if (cached) {
-      return BigInt(cached);
+      return BigInt(String(cached));
     }
   } catch {
     // Cache miss

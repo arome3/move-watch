@@ -95,7 +95,11 @@ async function getCircuitState(name: string): Promise<CircuitStateData> {
   try {
     const data = await redis.get(key);
     if (data) {
-      return JSON.parse(data);
+      // Handle both string and already-parsed object from Upstash
+      if (typeof data === 'string') {
+        return JSON.parse(data);
+      }
+      return data as CircuitStateData;
     }
   } catch {
     // Redis error, default to closed

@@ -185,17 +185,17 @@ export async function getFailureRateMetrics(
       const gasSumKey = getBucketKey(GAS_SUM_PREFIX, key, bucketTime, granularity);
       const gasCountKey = getBucketKey(GAS_COUNT_PREFIX, key, bucketTime, granularity);
 
-      const [countStr, failStr, gasSumStr, gasCountStr] = await Promise.all([
+      const [countRaw, failRaw, gasSumRaw, gasCountRaw] = await Promise.all([
         redis.get(countKey),
         redis.get(failKey),
         redis.get(gasSumKey),
         redis.get(gasCountKey),
       ]);
 
-      const count = parseInt(countStr || '0', 10);
-      const failed = parseInt(failStr || '0', 10);
-      const gasSum = parseFloat(gasSumStr || '0');
-      const bucketGasCount = parseInt(gasCountStr || '0', 10);
+      const count = parseInt(String(countRaw || '0'), 10);
+      const failed = parseInt(String(failRaw || '0'), 10);
+      const gasSum = parseFloat(String(gasSumRaw || '0'));
+      const bucketGasCount = parseInt(String(gasCountRaw || '0'), 10);
 
       const failureRate = count > 0 ? (failed / count) * 100 : 0;
       const avgGas = bucketGasCount > 0 ? gasSum / bucketGasCount : 0;
@@ -263,13 +263,13 @@ export async function getRealtimeFailureRate(
       const countKey = getBucketKey(TX_COUNT_PREFIX, key, bucketTime, 'minute');
       const failKey = getBucketKey(TX_FAIL_PREFIX, key, bucketTime, 'minute');
 
-      const [countStr, failStr] = await Promise.all([
+      const [countRaw, failRaw] = await Promise.all([
         redis.get(countKey),
         redis.get(failKey),
       ]);
 
-      currentTotal += parseInt(countStr || '0', 10);
-      currentFailed += parseInt(failStr || '0', 10);
+      currentTotal += parseInt(String(countRaw || '0'), 10);
+      currentFailed += parseInt(String(failRaw || '0'), 10);
     }
 
     // Get previous period for trend comparison
@@ -278,13 +278,13 @@ export async function getRealtimeFailureRate(
       const countKey = getBucketKey(TX_COUNT_PREFIX, key, bucketTime, 'minute');
       const failKey = getBucketKey(TX_FAIL_PREFIX, key, bucketTime, 'minute');
 
-      const [countStr, failStr] = await Promise.all([
+      const [countRaw2, failRaw2] = await Promise.all([
         redis.get(countKey),
         redis.get(failKey),
       ]);
 
-      previousTotal += parseInt(countStr || '0', 10);
-      previousFailed += parseInt(failStr || '0', 10);
+      previousTotal += parseInt(String(countRaw2 || '0'), 10);
+      previousFailed += parseInt(String(failRaw2 || '0'), 10);
     }
   } catch (error) {
     console.error('Error fetching realtime failure rate:', error);

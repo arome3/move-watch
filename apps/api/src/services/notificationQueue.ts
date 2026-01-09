@@ -207,27 +207,31 @@ export async function queueNotificationBatch(
 
 /**
  * Process the next notification from the queue
- * Uses BRPOPLPUSH for reliable processing
+ * Uses LMOVE for reliable processing (atomic move from queue to processing)
  */
 export async function processNextNotification(
-  timeoutSeconds = PROCESSING_TIMEOUT_SECONDS
+  _timeoutSeconds = PROCESSING_TIMEOUT_SECONDS
 ): Promise<NotificationJob | null> {
-  // Move job from queue to processing atomically
-  const jobJson = await redis.brpoplpush(
+  // Move job from queue to processing atomically using LMOVE
+  // right from source (oldest item), left to destination (newest)
+  const jobJson = await redis.lmove(
     NOTIFICATION_QUEUE,
     NOTIFICATION_PROCESSING,
-    timeoutSeconds
+    'right',
+    'left'
   );
 
   if (!jobJson) return null;
 
+  const jobJsonStr = typeof jobJson === 'string' ? jobJson : JSON.stringify(jobJson);
+
   let job: NotificationJob;
   try {
-    job = JSON.parse(jobJson);
+    job = typeof jobJson === 'string' ? JSON.parse(jobJson) : (jobJson as NotificationJob);
   } catch (error) {
     console.error('[NotificationQueue] Failed to parse job:', error);
     // Remove malformed job from processing queue
-    await redis.lrem(NOTIFICATION_PROCESSING, 1, jobJson);
+    await redis.lrem(NOTIFICATION_PROCESSING, 1, jobJsonStr);
     return null;
   }
 
@@ -245,7 +249,7 @@ export async function processNextNotification(
     }
 
     // Remove from processing queue (success)
-    await redis.lrem(NOTIFICATION_PROCESSING, 1, jobJson);
+    await redis.lrem(NOTIFICATION_PROCESSING, 1, jobJsonStr);
     console.log(`[NotificationQueue] Processed notification ${job.id}`);
 
     return job;
@@ -258,7 +262,7 @@ export async function processNextNotification(
     job.lastError = errorMessage;
 
     // Remove from processing queue
-    await redis.lrem(NOTIFICATION_PROCESSING, 1, jobJson);
+    await redis.lrem(NOTIFICATION_PROCESSING, 1, jobJsonStr);
 
     if (job.retryCount < MAX_RETRIES) {
       // Re-queue for retry (at the front for faster retry)
