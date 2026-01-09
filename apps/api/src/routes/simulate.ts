@@ -70,7 +70,7 @@ const simulateSchema = z.object({
  * GET /simulate/cli-status
  * Check if Aptos CLI is installed for detailed tracing
  */
-router.get('/cli-status', async (req, res) => {
+router.get('/cli-status', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const status = await checkCliInstalled();
     res.json({
@@ -96,7 +96,7 @@ router.get('/cli-status', async (req, res) => {
  * GET /simulate/state-override-support
  * Check if state overrides are supported (requires Aptos CLI 4.5.0+ on server)
  */
-router.get('/state-override-support', async (req, res) => {
+router.get('/state-override-support', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const support = await checkStateOverrideSupport();
     res.json({
@@ -136,7 +136,7 @@ router.get('/state-override-support', async (req, res) => {
  * - function: Optional function path to get specific benchmark
  * - refresh: 'true' to force refresh cache
  */
-router.get('/gas-benchmarks', async (req, res) => {
+router.get('/gas-benchmarks', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const network = (req.query.network as Network) || 'testnet';
     const functionPath = req.query.function as string | undefined;
@@ -203,7 +203,7 @@ router.get('/gas-benchmarks', async (req, res) => {
  * Query params:
  * - network: 'mainnet' | 'testnet' (default: 'testnet')
  */
-router.get('/network-stats', async (req, res) => {
+router.get('/network-stats', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const network = (req.query.network as Network) || 'testnet';
 

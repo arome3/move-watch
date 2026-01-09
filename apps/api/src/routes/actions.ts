@@ -106,7 +106,7 @@ const testActionSchema = z.object({
 });
 
 // ============================================================================
-// TEMPLATE ROUTES (no auth required)
+// TEMPLATE ROUTES (auth required)
 // ============================================================================
 
 /**
@@ -118,7 +118,7 @@ const testActionSchema = z.object({
  * - difficulty: Filter by difficulty (beginner, intermediate, advanced)
  * - network: Filter by network (mainnet, testnet, both)
  */
-router.get('/templates', (req, res) => {
+router.get('/templates', requireAuth, (req: AuthenticatedRequest, res) => {
   let templates: ActionTemplate[] = [...actionTemplates];
 
   // Filter by category
@@ -158,7 +158,7 @@ router.get('/templates', (req, res) => {
  * GET /actions/templates/:id
  * Get a specific template with full code
  */
-router.get('/templates/:id', (req, res) => {
+router.get('/templates/:id', requireAuth, (req: AuthenticatedRequest, res) => {
   const { id } = req.params;
   const template = getTemplateById(id);
 

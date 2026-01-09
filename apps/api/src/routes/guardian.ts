@@ -15,6 +15,7 @@ import { Router, type Router as RouterType } from 'express';
 import { z } from 'zod';
 import { rateLimit } from '../middleware/rateLimit.js';
 import { requirePayment } from '../middleware/x402.js';
+import { requireAuth, type AuthenticatedRequest } from '../middleware/auth.js';
 // Note: Guardian uses subscription-based access for human users
 // AI agents can use /check/agent endpoint with x402 micropayments
 import {
@@ -80,8 +81,9 @@ const guardianCheckSchema = z.object({
  */
 router.post(
   '/check',
+  requireAuth,
   rateLimit('guardian'),
-  async (req, res, next) => {
+  async (req: AuthenticatedRequest, res, next) => {
     try {
       // Validate request body
       const parseResult = guardianCheckSchema.safeParse(req.body);
@@ -218,7 +220,7 @@ router.get('/check/:shareId', async (req, res, next) => {
  *   total: number
  * }
  */
-router.get('/patterns', async (_req, res, next) => {
+router.get('/patterns', requireAuth, async (_req: AuthenticatedRequest, res, next) => {
   try {
     const patterns = getPatternSummary();
 
@@ -244,7 +246,7 @@ router.get('/patterns', async (_req, res, next) => {
  *   total: number
  * }
  */
-router.get('/demo', async (_req, res, next) => {
+router.get('/demo', requireAuth, async (_req: AuthenticatedRequest, res, next) => {
   try {
     const transactions = getDemoTransactions();
 
@@ -272,7 +274,7 @@ router.get('/demo', async (_req, res, next) => {
  *   lastUpdated: string
  * }
  */
-router.get('/scam-database', async (_req, res, next) => {
+router.get('/scam-database', requireAuth, async (_req: AuthenticatedRequest, res, next) => {
   try {
     const stats = getScamDatabaseStats();
 
@@ -305,7 +307,7 @@ router.get('/scam-database', async (_req, res, next) => {
  *   howItHelps: string[]
  * }
  */
-router.get('/move-prover', async (_req, res, next) => {
+router.get('/move-prover', requireAuth, async (_req: AuthenticatedRequest, res, next) => {
   try {
     // Get prover info and system availability
     const [proverInfo, proverStatus] = await Promise.all([
@@ -348,7 +350,7 @@ router.get('/move-prover', async (_req, res, next) => {
  *   howItHelps: string[]
  * }
  */
-router.get('/market-data', async (_req, res, next) => {
+router.get('/market-data', requireAuth, async (_req: AuthenticatedRequest, res, next) => {
   try {
     const stats = getMarketDataStats();
 
