@@ -1,5 +1,5 @@
 import { PrismaAdapter } from '@auth/prisma-adapter';
-import { prisma } from '@movewatch/database';
+import { prisma } from './prisma';
 import type { NextAuthOptions, User } from 'next-auth';
 import type { Adapter } from 'next-auth/adapters';
 import CredentialsProvider from 'next-auth/providers/credentials';

@@ -1,0 +1,506 @@
+generator client {
+  provider      = "prisma-client-js"
+  // Output to web app's local node_modules for Vercel compatibility
+  output        = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User tiers for rate limiting and features
+enum Tier {
+  FREE
+  PRO
+  TEAM
+  ENTERPRISE
+}
+
+// Supported networks
+enum Network {
+  MAINNET
+  TESTNET
+  DEVNET
+}
+
+// Alert condition types
+enum AlertConditionType {
+  TX_FAILED
+  BALANCE_THRESHOLD
+  EVENT_EMITTED
+  GAS_SPIKE
+  FUNCTION_CALL
+  TOKEN_TRANSFER
+  LARGE_TRANSACTION
+}
+
+// Risk severity levels
+enum RiskSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// Risk categories for Guardian analysis
+enum RiskCategory {
+  EXPLOIT
+  RUG_PULL
+  EXCESSIVE_COST
+  PERMISSION
+}
+
+// Guardian simulation status
+enum GuardianSimulationStatus {
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+// Guardian LLM analysis status
+enum GuardianLlmStatus {
+  USED
+  SKIPPED
+  RATE_LIMITED
+  ERROR
+}
+
+// Notification channel types
+enum ChannelType {
+  DISCORD
+  SLACK
+  TELEGRAM
+  WEBHOOK
+  EMAIL
+}
+
+// Threshold comparison operators
+enum ThresholdOperator {
+  GT
+  LT
+  EQ
+  GTE
+  LTE
+}
+
+// User model with NextAuth.js support
+model User {
+  id            String       @id @default(cuid())
+  email         String?      @unique
+  walletAddress String?      @unique @map("wallet_address")
+  name          String?
+  image         String?
+  tier          Tier         @default(FREE)
+
+  emailVerified DateTime?    @map("email_verified")
+  accounts      Account[]
+  sessions      Session[]
+
+  simulations            Simulation[]
+  alerts                 Alert[]
+  channels               NotificationChannel[]
+  watchedContracts       WatchedContract[]
+  actions                Action[]
+  payments               Payment[]
+  apiKeys                ApiKey[]
+  notificationPreference NotificationPreference?
+  guardianChecks         GuardianCheck[]
+
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Simulation {
+  id            String    @id @default(cuid())
+  shareId       String    @unique @default(cuid()) @map("share_id")
+  userId        String?   @map("user_id")
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  network       Network
+  sender        String?
+  functionName  String    @map("function_name")
+  typeArguments String[]  @map("type_arguments")
+  arguments     Json      @default("[]")
+  maxGasAmount  Int       @default(100000) @map("max_gas_amount")
+  gasUnitPrice  Int       @default(100) @map("gas_unit_price")
+  success       Boolean
+  gasUsed       Int?      @map("gas_used")
+  gasBreakdown  Json?     @map("gas_breakdown")
+  stateChanges  Json?     @map("state_changes")
+  events        Json?
+  error         Json?
+  rawResponse   Json?     @map("raw_response")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  expiresAt     DateTime  @map("expires_at")
+  guardianChecks GuardianCheck[]
+
+  @@index([userId])
+  @@index([shareId])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@map("simulations")
+}
+
+model Alert {
+  id              String             @id @default(cuid())
+  userId          String             @map("user_id")
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  enabled         Boolean            @default(true)
+  network         Network            @default(TESTNET)
+  conditionType   AlertConditionType @map("condition_type")
+  conditionConfig Json               @map("condition_config")
+  alertChannels   AlertChannel[]
+  cooldownSeconds Int                @default(60) @map("cooldown_seconds")
+  lastTriggeredAt DateTime?          @map("last_triggered_at")
+  triggerCount    Int                @default(0) @map("trigger_count")
+  triggers        AlertTrigger[]
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([conditionType])
+  @@index([enabled])
+  @@index([network, enabled])
+  @@index([userId, enabled])
+  @@map("alerts")
+}
+
+model NotificationChannel {
+  id          String         @id @default(cuid())
+  userId      String         @map("user_id")
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  type        ChannelType
+  config      Json
+  alertChannels AlertChannel[]
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([userId, type])
+  @@map("notification_channels")
+}
+
+model AlertChannel {
+  id          String              @id @default(cuid())
+  alertId     String              @map("alert_id")
+  channelId   String              @map("channel_id")
+  alert       Alert               @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  channel     NotificationChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  enabled     Boolean             @default(true)
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  @@unique([alertId, channelId])
+  @@index([alertId])
+  @@index([channelId])
+  @@map("alert_channels")
+}
+
+model AlertTrigger {
+  id                  String   @id @default(cuid())
+  alertId             String   @map("alert_id")
+  alert               Alert    @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  eventData           Json     @map("event_data")
+  transactionHash     String?  @map("transaction_hash")
+  notificationsSent   String[] @map("notifications_sent")
+  notificationErrors  Json?    @map("notification_errors")
+  triggeredAt         DateTime @default(now()) @map("triggered_at")
+
+  @@index([alertId])
+  @@index([triggeredAt])
+  @@index([transactionHash])
+  @@map("alert_triggers")
+}
+
+model WatchedContract {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleAddress String   @map("module_address")
+  name          String?
+  network       Network
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, moduleAddress, network])
+  @@index([userId])
+  @@map("watched_contracts")
+}
+
+enum ActionTriggerType {
+  EVENT
+  BLOCK
+  SCHEDULE
+  WEBHOOK
+}
+
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  TIMEOUT
+}
+
+model Action {
+  id              String            @id @default(cuid())
+  userId          String            @map("user_id")
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  enabled         Boolean           @default(false)
+  network         Network           @default(TESTNET)
+  code            String            @db.Text
+  triggerType     ActionTriggerType @map("trigger_type")
+  triggerConfig   Json              @map("trigger_config")
+  maxExecutionMs  Int               @default(30000) @map("max_execution_ms")
+  memoryLimitMb   Int               @default(128) @map("memory_limit_mb")
+  cooldownSeconds Int               @default(60) @map("cooldown_seconds")
+  lastExecutedAt  DateTime?         @map("last_executed_at")
+  executionCount  Int               @default(0) @map("execution_count")
+  successCount    Int               @default(0) @map("success_count")
+  failureCount    Int               @default(0) @map("failure_count")
+  secrets         ActionSecret[]
+  executions      ActionExecution[]
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([triggerType, enabled])
+  @@index([network, enabled])
+  @@map("actions")
+}
+
+model ActionSecret {
+  id              String   @id @default(cuid())
+  actionId        String   @map("action_id")
+  action          Action   @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  name            String
+  encryptedValue  String   @map("encrypted_value") @db.Text
+  iv              String
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([actionId, name])
+  @@index([actionId])
+  @@map("action_secrets")
+}
+
+model ActionExecution {
+  id              String          @id @default(cuid())
+  actionId        String          @map("action_id")
+  action          Action          @relation(fields: [actionId], references: [id], onDelete: Cascade)
+  status          ExecutionStatus @default(PENDING)
+  triggerData     Json?           @map("trigger_data")
+  transactionHash String?         @map("transaction_hash")
+  result          Json?
+  logs            String[]        @default([])
+  error           Json?
+  durationMs      Int?            @map("duration_ms")
+  memoryUsedMb    Float?          @map("memory_used_mb")
+  startedAt       DateTime?       @map("started_at")
+  completedAt     DateTime?       @map("completed_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  @@index([actionId])
+  @@index([actionId, createdAt])
+  @@index([status])
+  @@index([status, createdAt])
+  @@map("action_executions")
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  EXPIRED
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String?       @map("user_id")
+  user              User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  payerAddress      String        @map("payer_address")
+  amount            String
+  amountFormatted   String        @map("amount_formatted")
+  transactionHash   String?       @unique @map("transaction_hash")
+  network           Network       @default(TESTNET)
+  status            PaymentStatus @default(PENDING)
+  endpoint          String
+  requestId         String        @unique @map("request_id")
+  priceOctas        String        @map("price_octas")
+  priceUsd          Float?        @map("price_usd")
+  signaturePayload  String?       @map("signature_payload") @db.Text
+  verifiedAt        DateTime?     @map("verified_at")
+  confirmedAt       DateTime?     @map("confirmed_at")
+  errorMessage      String?       @map("error_message")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([payerAddress])
+  @@index([status])
+  @@index([endpoint])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+model UsageQuota {
+  id                String   @id @default(cuid())
+  userId            String?  @unique @map("user_id")
+  walletAddress     String?  @unique @map("wallet_address")
+  simulationsToday  Int      @default(0) @map("simulations_today")
+  guardianChecks    Int      @default(0) @map("guardian_checks")
+  alertsCreated     Int      @default(0) @map("alerts_created")
+  actionsExecuted   Int      @default(0) @map("actions_executed")
+  monitoringCalls   Int      @default(0) @map("monitoring_calls")
+  lastResetDate     DateTime @default(now()) @map("last_reset_date")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("usage_quotas")
+}
+
+model PricingConfig {
+  id              String   @id @default(cuid())
+  endpoint        String   @unique
+  priceOctas      String   @map("price_octas")
+  freeLimit       Int      @default(0) @map("free_limit")
+  freeLimitPeriod String   @default("day") @map("free_limit_period")
+  description     String?
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("pricing_configs")
+}
+
+model ApiKey {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String?
+  keyPrefix       String    @map("key_prefix")
+  keyHash         String    @unique @map("key_hash")
+  lastUsedAt      DateTime? @map("last_used_at")
+  usageCount      Int       @default(0) @map("usage_count")
+  expiresAt       DateTime? @map("expires_at")
+  revokedAt       DateTime? @map("revoked_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([keyHash])
+  @@index([revokedAt])
+  @@map("api_keys")
+}
+
+model NotificationPreference {
+  id              String    @id @default(cuid())
+  userId          String    @unique @map("user_id")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled    Boolean   @default(true) @map("email_enabled")
+  emailAddress    String?   @map("email_address")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("notification_preferences")
+}
+
+model GuardianCheck {
+  id              String        @id @default(cuid())
+  shareId         String        @unique @default(cuid()) @map("share_id")
+  userId          String?       @map("user_id")
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  network         Network
+  sender          String?
+  functionName    String        @map("function_name")
+  typeArguments   String[]      @map("type_arguments")
+  arguments       Json          @default("[]")
+  simulationId    String?       @map("simulation_id")
+  simulation      Simulation?   @relation(fields: [simulationId], references: [id], onDelete: SetNull)
+  overallRisk     RiskSeverity  @map("overall_risk")
+  riskScore       Int           @map("risk_score")
+  patternMatchMs  Int           @map("pattern_match_ms")
+  llmAnalysisMs   Int?          @map("llm_analysis_ms")
+  usedLlm         Boolean       @default(false) @map("used_llm")
+  llmModel        String?       @map("llm_model")
+  simulationStatus GuardianSimulationStatus @default(SKIPPED) @map("simulation_status")
+  simulationError  String?                   @map("simulation_error")
+  llmStatus        GuardianLlmStatus         @default(SKIPPED) @map("llm_status")
+  warnings         Json                      @default("[]")
+  rawPatternResults Json?       @map("raw_pattern_results")
+  rawLlmResponse    String?     @map("raw_llm_response") @db.Text
+  issues          GuardianIssue[]
+  createdAt       DateTime      @default(now()) @map("created_at")
+  expiresAt       DateTime      @map("expires_at")
+
+  @@index([userId])
+  @@index([shareId])
+  @@index([overallRisk])
+  @@index([createdAt])
+  @@map("guardian_checks")
+}
+
+model GuardianIssue {
+  id              String        @id @default(cuid())
+  checkId         String        @map("check_id")
+  check           GuardianCheck @relation(fields: [checkId], references: [id], onDelete: Cascade)
+  category        RiskCategory
+  severity        RiskSeverity
+  title           String
+  description     String        @db.Text
+  recommendation  String        @db.Text
+  patternId       String?       @map("pattern_id")
+  evidence        Json?
+  confidence      Float         @default(1.0)
+  source          String        @default("pattern")
+
+  @@index([checkId])
+  @@index([category])
+  @@index([severity])
+  @@map("guardian_issues")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expires])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
