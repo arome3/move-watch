@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import type {
   AlertResponse,
   AlertCondition,
-  ChannelConfig,
   CreateAlertRequest,
   UpdateAlertRequest,
   TestNotificationResult,
@@ -23,15 +22,16 @@ interface AlertsState {
   isUpdating: boolean;
   isDeleting: boolean;
   isTesting: boolean;
+  testingAlertId: string | null;
 
   // Error state
   error: string | null;
 
-  // Form state for create/edit
+  // Form state for create/edit - now uses channelIds
   formName: string;
   formNetwork: Network;
   formCondition: AlertCondition | null;
-  formChannels: ChannelConfig[];
+  formChannelIds: string[];
   formCooldown: number;
   formErrors: Record<string, string>;
 
@@ -54,9 +54,7 @@ interface AlertsState {
   setFormName: (name: string) => void;
   setFormNetwork: (network: Network) => void;
   setFormCondition: (condition: AlertCondition | null) => void;
-  addChannel: (channel: ChannelConfig) => void;
-  updateChannel: (index: number, channel: ChannelConfig) => void;
-  removeChannel: (index: number) => void;
+  setFormChannelIds: (ids: string[]) => void;
   setFormCooldown: (seconds: number) => void;
   resetForm: () => void;
   loadAlertToForm: (alert: AlertResponse) => void;
@@ -72,7 +70,7 @@ const initialFormState = {
   formName: '',
   formNetwork: 'testnet' as Network,
   formCondition: null as AlertCondition | null,
-  formChannels: [] as ChannelConfig[],
+  formChannelIds: [] as string[],
   formCooldown: 60,
   formErrors: {} as Record<string, string>,
 };
@@ -87,6 +85,7 @@ export const useAlertsStore = create<AlertsState>()((set, get) => ({
   isUpdating: false,
   isDeleting: false,
   isTesting: false,
+  testingAlertId: null,
   error: null,
   testResults: null,
   ...initialFormState,
@@ -146,8 +145,8 @@ export const useAlertsStore = create<AlertsState>()((set, get) => ({
       return null;
     }
 
-    if (state.formChannels.length === 0) {
-      set({ formErrors: { channels: 'Please add at least one notification channel' } });
+    if (state.formChannelIds.length === 0) {
+      set({ formErrors: { channelIds: 'Please select at least one notification channel' } });
       return null;
     }
 
@@ -158,7 +157,7 @@ export const useAlertsStore = create<AlertsState>()((set, get) => ({
         name: state.formName,
         network: state.formNetwork,
         condition: state.formCondition,
-        channels: state.formChannels,
+        channelIds: state.formChannelIds,
         cooldownSeconds: state.formCooldown,
       };
 
@@ -194,7 +193,7 @@ export const useAlertsStore = create<AlertsState>()((set, get) => ({
         name: state.formName,
         network: state.formNetwork,
         condition: state.formCondition || undefined,
-        channels: state.formChannels.length > 0 ? state.formChannels : undefined,
+        channelIds: state.formChannelIds.length > 0 ? state.formChannelIds : undefined,
         cooldownSeconds: state.formCooldown,
       };
 
@@ -264,15 +263,16 @@ export const useAlertsStore = create<AlertsState>()((set, get) => ({
 
   // Test alert notifications
   testAlert: async (id: string) => {
-    set({ isTesting: true, error: null, testResults: null });
+    set({ isTesting: true, testingAlertId: id, error: null, testResults: null });
 
     try {
       const results = await alertsApi.testAlert(id);
-      set({ testResults: results, isTesting: false });
+      set({ testResults: results, isTesting: false, testingAlertId: null });
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to test alert',
         isTesting: false,
+        testingAlertId: null,
       });
     }
   },
@@ -281,34 +281,19 @@ export const useAlertsStore = create<AlertsState>()((set, get) => ({
   setFormName: (formName) => set({ formName }),
   setFormNetwork: (formNetwork) => set({ formNetwork }),
   setFormCondition: (formCondition) => set({ formCondition }),
-
-  addChannel: (channel) =>
-    set((s) => ({ formChannels: [...s.formChannels, channel] })),
-
-  updateChannel: (index, channel) =>
-    set((s) => ({
-      formChannels: s.formChannels.map((c, i) => (i === index ? channel : c)),
-    })),
-
-  removeChannel: (index) =>
-    set((s) => ({
-      formChannels: s.formChannels.filter((_, i) => i !== index),
-    })),
-
+  setFormChannelIds: (formChannelIds) => set({ formChannelIds }),
   setFormCooldown: (formCooldown) => set({ formCooldown }),
 
   resetForm: () => set(initialFormState),
 
   loadAlertToForm: (alert: AlertResponse) => {
-    // We need to fetch the full channel configs from the API
-    // For now, just load what we have
+    // Load alert data including channel IDs from the channels array
     set({
       formName: alert.name,
       formNetwork: alert.network,
       formCondition: alert.conditionConfig,
       formCooldown: alert.cooldownSeconds,
-      // Channels need to be fetched separately since AlertResponse only has summary
-      formChannels: [],
+      formChannelIds: alert.channels.map((c) => c.id),
       formErrors: {},
     });
   },
@@ -327,8 +312,8 @@ export const useAlertsStore = create<AlertsState>()((set, get) => ({
       errors.condition = 'Please configure a condition';
     }
 
-    if (state.formChannels.length === 0) {
-      errors.channels = 'Please add at least one notification channel';
+    if (state.formChannelIds.length === 0) {
+      errors.channelIds = 'Please select at least one notification channel';
     }
 
     if (state.formCooldown < 0 || state.formCooldown > 86400) {

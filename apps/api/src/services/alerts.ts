@@ -1,3 +1,4 @@
+import type { Prisma } from '@movewatch/database';
 import {
   type CreateAlertRequest,
   type UpdateAlertRequest,
@@ -18,33 +19,57 @@ const COOLDOWN_KEY_PREFIX = 'cooldown:alert:';
 
 /**
  * Create a new alert with notification channels
+ * Accepts channelIds (array of existing channel IDs) to link to
  */
 export async function createAlert(
   userId: string,
-  request: CreateAlertRequest
+  request: CreateAlertRequest & { channelIds?: string[] }
 ): Promise<AlertResponse> {
   // Ensure user exists (create if not - for dev purposes)
   await ensureUserExists(userId);
+
+  // Validate channelIds if provided
+  if (request.channelIds && request.channelIds.length > 0) {
+    const channels = await prisma.notificationChannel.findMany({
+      where: {
+        id: { in: request.channelIds },
+        userId, // Ensure user owns these channels
+      },
+    });
+
+    if (channels.length !== request.channelIds.length) {
+      throw new Error('One or more channel IDs are invalid or not owned by user');
+    }
+  }
+
+  const networkValue = (request.network?.toUpperCase() || 'TESTNET') as 'MAINNET' | 'TESTNET' | 'DEVNET';
 
   const alert = await prisma.alert.create({
     data: {
       userId,
       name: request.name,
-      network: (request.network?.toUpperCase() || 'TESTNET') as 'MAINNET' | 'TESTNET' | 'DEVNET',
+      network: networkValue,
       conditionType: mapConditionType(request.condition.type),
-      conditionConfig: request.condition as unknown as Record<string, unknown>,
+      conditionConfig: request.condition as unknown as Prisma.InputJsonValue,
       cooldownSeconds: request.cooldownSeconds ?? 60,
-      channels: {
-        create: request.channels.map((channel) => ({
-          type: mapChannelType(channel.type),
-          config: channel.config as unknown as Record<string, unknown>,
+      // Create AlertChannel junction records linking to existing channels
+      alertChannels: request.channelIds?.length ? {
+        create: request.channelIds.map((channelId) => ({
+          channelId,
         })),
-      },
+      } : undefined,
     },
     include: {
-      channels: true,
+      alertChannels: {
+        include: {
+          channel: true,
+        },
+      },
     },
   });
+
+  // Invalidate cache for this network
+  await invalidateActiveAlertsCache(networkValue.toLowerCase());
 
   return formatAlertResponse(alert);
 }
@@ -55,7 +80,13 @@ export async function createAlert(
 export async function getAlerts(userId: string): Promise<AlertResponse[]> {
   const alerts = await prisma.alert.findMany({
     where: { userId },
-    include: { channels: true },
+    include: {
+      alertChannels: {
+        include: {
+          channel: true,
+        },
+      },
+    },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -71,7 +102,13 @@ export async function getAlertById(
 ): Promise<AlertResponse | null> {
   const alert = await prisma.alert.findFirst({
     where: { id: alertId, userId },
-    include: { channels: true },
+    include: {
+      alertChannels: {
+        include: {
+          channel: true,
+        },
+      },
+    },
   });
 
   if (!alert) return null;
@@ -80,11 +117,12 @@ export async function getAlertById(
 
 /**
  * Update an existing alert
+ * Accepts channelIds to replace existing channel associations
  */
 export async function updateAlert(
   alertId: string,
   userId: string,
-  updates: UpdateAlertRequest
+  updates: UpdateAlertRequest & { channelIds?: string[] }
 ): Promise<AlertResponse | null> {
   // Verify ownership
   const existing = await prisma.alert.findFirst({
@@ -92,6 +130,20 @@ export async function updateAlert(
   });
 
   if (!existing) return null;
+
+  // Validate channelIds if provided
+  if (updates.channelIds !== undefined && updates.channelIds.length > 0) {
+    const channels = await prisma.notificationChannel.findMany({
+      where: {
+        id: { in: updates.channelIds },
+        userId, // Ensure user owns these channels
+      },
+    });
+
+    if (channels.length !== updates.channelIds.length) {
+      throw new Error('One or more channel IDs are invalid or not owned by user');
+    }
+  }
 
   // Build update data
   const updateData: Record<string, unknown> = {};
@@ -106,42 +158,55 @@ export async function updateAlert(
   }
   if (updates.condition !== undefined) {
     updateData.conditionType = mapConditionType(updates.condition.type);
-    updateData.conditionConfig = updates.condition as unknown as Record<string, unknown>;
+    updateData.conditionConfig = updates.condition as unknown as Prisma.InputJsonValue;
   }
 
-  // Update alert
-  const alert = await prisma.alert.update({
-    where: { id: alertId },
-    data: updateData,
-    include: { channels: true },
-  });
-
-  // If channels were updated, replace them
-  if (updates.channels !== undefined) {
-    // Delete existing channels
-    await prisma.notificationChannel.deleteMany({
-      where: { alertId },
+  // Wrap all updates in a transaction for atomicity
+  const updatedAlert = await prisma.$transaction(async (tx) => {
+    // Update alert
+    await tx.alert.update({
+      where: { id: alertId },
+      data: updateData,
     });
 
-    // Create new channels
-    await prisma.notificationChannel.createMany({
-      data: updates.channels.map((channel) => ({
-        alertId,
-        type: mapChannelType(channel.type),
-        config: channel.config as unknown as Record<string, unknown>,
-      })),
-    });
+    // If channelIds were provided, replace the junction table records
+    if (updates.channelIds !== undefined) {
+      // Delete existing alert-channel associations
+      await tx.alertChannel.deleteMany({
+        where: { alertId },
+      });
+
+      // Create new associations (if any channelIds provided)
+      if (updates.channelIds.length > 0) {
+        await tx.alertChannel.createMany({
+          data: updates.channelIds.map((channelId) => ({
+            alertId,
+            channelId,
+          })),
+        });
+      }
+    }
 
     // Refetch with updated channels
-    const updatedAlert = await prisma.alert.findUnique({
+    return tx.alert.findUnique({
       where: { id: alertId },
-      include: { channels: true },
+      include: {
+        alertChannels: {
+          include: {
+            channel: true,
+          },
+        },
+      },
     });
+  });
 
-    return updatedAlert ? formatAlertResponse(updatedAlert) : null;
+  // Invalidate cache - both old and new network if changed
+  if (updates.network) {
+    await invalidateActiveAlertsCache(updates.network.toLowerCase());
   }
+  await invalidateActiveAlertsCache(existing.network.toLowerCase());
 
-  return formatAlertResponse(alert);
+  return updatedAlert ? formatAlertResponse(updatedAlert) : null;
 }
 
 /**
@@ -158,11 +223,16 @@ export async function deleteAlert(
 
   if (!alert) return false;
 
+  const network = alert.network.toLowerCase();
+
   // Delete from database (cascades to channels and triggers)
   await prisma.alert.delete({ where: { id: alertId } });
 
   // Clear cooldown from Redis
   await redis.del(`${COOLDOWN_KEY_PREFIX}${alertId}`);
+
+  // Invalidate cache for this network
+  await invalidateActiveAlertsCache(network);
 
   return true;
 }
@@ -203,6 +273,7 @@ export async function getTriggers(
 
 /**
  * Check if an alert is in cooldown
+ * @deprecated Use acquireCooldown for atomic check-and-set
  */
 export async function checkCooldown(alertId: string): Promise<boolean> {
   const cooldownKey = `${COOLDOWN_KEY_PREFIX}${alertId}`;
@@ -212,10 +283,54 @@ export async function checkCooldown(alertId: string): Promise<boolean> {
 
 /**
  * Set cooldown for an alert
+ * @deprecated Use acquireCooldown for atomic check-and-set
  */
 export async function setCooldown(alertId: string, seconds: number): Promise<void> {
   const cooldownKey = `${COOLDOWN_KEY_PREFIX}${alertId}`;
   await redis.setex(cooldownKey, seconds, Date.now().toString());
+}
+
+/**
+ * Atomically acquire a cooldown lock for an alert
+ *
+ * This prevents race conditions where multiple workers could process the same
+ * alert simultaneously. Uses Redis SET NX (set if not exists) with expiration.
+ *
+ * @param alertId - The alert ID to acquire cooldown for
+ * @param seconds - Cooldown duration in seconds
+ * @returns true if cooldown was acquired (alert can be triggered), false if in cooldown
+ */
+export async function acquireCooldown(alertId: string, seconds: number): Promise<boolean> {
+  const cooldownKey = `${COOLDOWN_KEY_PREFIX}${alertId}`;
+
+  // SET NX with EX in a single atomic operation
+  // Returns 'OK' if key was set (not in cooldown), null if key already exists (in cooldown)
+  const result = await redis.set(
+    cooldownKey,
+    Date.now().toString(),
+    'EX', seconds,
+    'NX'
+  );
+
+  return result === 'OK';
+}
+
+/**
+ * Get remaining cooldown time for an alert
+ * @returns Remaining seconds, or 0 if not in cooldown
+ */
+export async function getCooldownRemaining(alertId: string): Promise<number> {
+  const cooldownKey = `${COOLDOWN_KEY_PREFIX}${alertId}`;
+  const ttl = await redis.ttl(cooldownKey);
+  return ttl > 0 ? ttl : 0;
+}
+
+/**
+ * Clear cooldown for an alert (for testing or admin use)
+ */
+export async function clearCooldown(alertId: string): Promise<void> {
+  const cooldownKey = `${COOLDOWN_KEY_PREFIX}${alertId}`;
+  await redis.del(cooldownKey);
 }
 
 /**
@@ -239,10 +354,10 @@ export async function recordTrigger(
     prisma.alertTrigger.create({
       data: {
         alertId,
-        eventData: eventData as Record<string, unknown>,
+        eventData: eventData as Prisma.InputJsonValue,
         transactionHash,
         notificationsSent: successfulChannels,
-        notificationErrors: Object.keys(errors).length > 0 ? errors : undefined,
+        notificationErrors: Object.keys(errors).length > 0 ? (errors as Prisma.InputJsonValue) : undefined,
       },
     }),
     prisma.alert.update({
@@ -255,17 +370,73 @@ export async function recordTrigger(
   ]);
 }
 
+// Cache configuration for active alerts
+const ACTIVE_ALERTS_CACHE_PREFIX = 'cache:activeAlerts:';
+const ACTIVE_ALERTS_CACHE_TTL_SECONDS = 30; // Cache for 30 seconds
+
 /**
  * Get all active (enabled) alerts for a given network
+ * Results are cached in Redis for performance (30s TTL)
  */
 export async function getActiveAlerts(network: 'mainnet' | 'testnet' | 'devnet') {
-  return prisma.alert.findMany({
+  const cacheKey = `${ACTIVE_ALERTS_CACHE_PREFIX}${network}`;
+
+  // Try to get from cache first
+  try {
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch (error) {
+    // Cache miss or error, proceed to database
+    console.warn('[AlertCache] Cache read error:', error);
+  }
+
+  // Query database
+  const alerts = await prisma.alert.findMany({
     where: {
       enabled: true,
       network: network.toUpperCase() as 'MAINNET' | 'TESTNET' | 'DEVNET',
     },
-    include: { channels: true },
+    include: {
+      alertChannels: {
+        where: { enabled: true }, // Only include enabled channel associations
+        include: {
+          channel: true,
+        },
+      },
+    },
   });
+
+  // Store in cache
+  try {
+    await redis.setex(cacheKey, ACTIVE_ALERTS_CACHE_TTL_SECONDS, JSON.stringify(alerts));
+  } catch (error) {
+    console.warn('[AlertCache] Cache write error:', error);
+  }
+
+  return alerts;
+}
+
+/**
+ * Invalidate the active alerts cache for a network
+ * Call this when alerts are created, updated, or deleted
+ */
+export async function invalidateActiveAlertsCache(network?: string): Promise<void> {
+  try {
+    if (network) {
+      await redis.del(`${ACTIVE_ALERTS_CACHE_PREFIX}${network.toLowerCase()}`);
+    } else {
+      // Invalidate all networks
+      await Promise.all([
+        redis.del(`${ACTIVE_ALERTS_CACHE_PREFIX}mainnet`),
+        redis.del(`${ACTIVE_ALERTS_CACHE_PREFIX}testnet`),
+        redis.del(`${ACTIVE_ALERTS_CACHE_PREFIX}devnet`),
+      ]);
+    }
+  } catch (error) {
+    console.warn('[AlertCache] Cache invalidation error:', error);
+  }
 }
 
 // ============================================================================
@@ -303,18 +474,20 @@ function mapConditionType(type: string): 'TX_FAILED' | 'BALANCE_THRESHOLD' | 'EV
 /**
  * Map channel type string to Prisma enum
  */
-function mapChannelType(type: string): 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'WEBHOOK' {
-  const mapping: Record<string, 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'WEBHOOK'> = {
+function mapChannelType(type: string): 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'WEBHOOK' | 'EMAIL' {
+  const mapping: Record<string, 'DISCORD' | 'SLACK' | 'TELEGRAM' | 'WEBHOOK' | 'EMAIL'> = {
     discord: 'DISCORD',
     slack: 'SLACK',
     telegram: 'TELEGRAM',
     webhook: 'WEBHOOK',
+    email: 'EMAIL',
   };
   return mapping[type] || 'WEBHOOK';
 }
 
 /**
  * Format database alert as API response
+ * Now uses alertChannels junction table to get channel data
  */
 function formatAlertResponse(alert: {
   id: string;
@@ -328,11 +501,15 @@ function formatAlertResponse(alert: {
   triggerCount: number;
   createdAt: Date;
   updatedAt: Date;
-  channels: Array<{
+  alertChannels: Array<{
     id: string;
-    type: string;
-    config: unknown;
     enabled: boolean;
+    channel: {
+      id: string;
+      name: string;
+      type: string;
+      config: unknown;
+    };
   }>;
 }): AlertResponse {
   return {
@@ -342,11 +519,12 @@ function formatAlertResponse(alert: {
     network: alert.network.toLowerCase() as 'mainnet' | 'testnet' | 'devnet',
     conditionType: alert.conditionType.toLowerCase().replace('_', '_') as AlertConditionType,
     conditionConfig: alert.conditionConfig as AlertResponse['conditionConfig'],
-    channels: alert.channels.map((c) => ({
-      id: c.id,
-      type: c.type.toLowerCase() as ChannelType,
+    channels: alert.alertChannels.map((ac) => ({
+      id: ac.channel.id,
+      name: ac.channel.name,
+      type: ac.channel.type.toLowerCase() as ChannelType,
       configured: true,
-      enabled: c.enabled,
+      enabled: ac.enabled,
     })),
     cooldownSeconds: alert.cooldownSeconds,
     lastTriggeredAt: alert.lastTriggeredAt?.toISOString() ?? null,

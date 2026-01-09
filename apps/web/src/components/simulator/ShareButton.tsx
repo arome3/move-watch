@@ -27,7 +27,7 @@ export function ShareButton({ shareUrl }: ShareButtonProps) {
                  ${
                    copied
                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-600'
+                     : 'bg-dark-700 text-dark-300 hover:bg-dark-600 border border-dark-600'
                  }`}
     >
       {copied ? (

@@ -81,10 +81,10 @@ export function AlertDetail({
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-semibold text-slate-100">{alert.name}</h1>
+              <h1 className="text-xl font-semibold text-dark-100">{alert.name}</h1>
               <AlertStatusBadge enabled={alert.enabled} />
             </div>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="text-sm text-dark-500 mt-0.5">
               {getConditionTypeLabel(alert.conditionType)} • {alert.network}
             </p>
           </div>
@@ -94,8 +94,8 @@ export function AlertDetail({
           <button
             onClick={onTest}
             disabled={isTesting}
-            className="px-3 py-1.5 text-sm text-slate-400 hover:text-slate-300
-                       border border-slate-700 rounded-lg hover:bg-slate-800
+            className="px-3 py-1.5 text-sm text-dark-400 hover:text-dark-300
+                       border border-dark-700 rounded-lg hover:bg-dark-800
                        transition-colors disabled:opacity-50"
           >
             {isTesting ? 'Testing...' : 'Test'}
@@ -130,25 +130,25 @@ export function AlertDetail({
 
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Total Triggers</p>
-          <p className="text-2xl font-semibold text-slate-100 mt-1">{alert.triggerCount}</p>
+        <div className="bg-dark-800/50 rounded-lg p-4 border border-dark-700">
+          <p className="text-xs text-dark-500 uppercase tracking-wide">Total Triggers</p>
+          <p className="text-2xl font-semibold text-dark-100 mt-1">{alert.triggerCount}</p>
         </div>
-        <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Last Triggered</p>
-          <p className="text-sm font-medium text-slate-100 mt-2">
+        <div className="bg-dark-800/50 rounded-lg p-4 border border-dark-700">
+          <p className="text-xs text-dark-500 uppercase tracking-wide">Last Triggered</p>
+          <p className="text-sm font-medium text-dark-100 mt-2">
             {formatDate(alert.lastTriggeredAt)}
           </p>
         </div>
-        <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Cooldown</p>
-          <p className="text-2xl font-semibold text-slate-100 mt-1">
+        <div className="bg-dark-800/50 rounded-lg p-4 border border-dark-700">
+          <p className="text-xs text-dark-500 uppercase tracking-wide">Cooldown</p>
+          <p className="text-2xl font-semibold text-dark-100 mt-1">
             {formatCooldown(alert.cooldownSeconds)}
           </p>
         </div>
-        <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Created</p>
-          <p className="text-sm font-medium text-slate-100 mt-2">
+        <div className="bg-dark-800/50 rounded-lg p-4 border border-dark-700">
+          <p className="text-xs text-dark-500 uppercase tracking-wide">Created</p>
+          <p className="text-sm font-medium text-dark-100 mt-2">
             {formatDate(alert.createdAt)}
           </p>
         </div>
@@ -156,23 +156,23 @@ export function AlertDetail({
 
       <div className="grid grid-cols-2 gap-6">
         {/* Condition Details */}
-        <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-          <h3 className="text-sm font-medium text-slate-300 mb-4">Condition</h3>
+        <div className="bg-dark-800 rounded-lg p-4 border border-dark-700">
+          <h3 className="text-sm font-medium text-dark-300 mb-4">Condition</h3>
           <div className="space-y-3">
             <div>
-              <p className="text-xs text-slate-500">Type</p>
-              <p className="text-sm font-medium text-slate-200 mt-0.5">
+              <p className="text-xs text-dark-500">Type</p>
+              <p className="text-sm font-medium text-dark-200 mt-0.5">
                 {getConditionTypeLabel(alert.conditionType)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-500">Configuration</p>
-              <p className="text-sm font-mono text-slate-200 mt-0.5 break-all">
+              <p className="text-xs text-dark-500">Configuration</p>
+              <p className="text-sm font-mono text-dark-200 mt-0.5 break-all">
                 {getConditionSummary()}
               </p>
             </div>
             <div className="pt-2">
-              <pre className="text-xs font-mono text-slate-400 bg-slate-900 p-3 rounded-lg overflow-x-auto">
+              <pre className="text-xs font-mono text-dark-400 bg-dark-900 p-3 rounded-lg overflow-x-auto">
                 {JSON.stringify(alert.conditionConfig, null, 2)}
               </pre>
             </div>
@@ -180,8 +180,8 @@ export function AlertDetail({
         </div>
 
         {/* Notification Channels */}
-        <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-          <h3 className="text-sm font-medium text-slate-300 mb-4">
+        <div className="bg-dark-800 rounded-lg p-4 border border-dark-700">
+          <h3 className="text-sm font-medium text-dark-300 mb-4">
             Notification Channels ({alert.channels.length})
           </h3>
           <ChannelStatus channels={alert.channels} />
@@ -189,8 +189,8 @@ export function AlertDetail({
       </div>
 
       {/* Trigger History */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-        <h3 className="text-sm font-medium text-slate-300 mb-4">Trigger History</h3>
+      <div className="bg-dark-800 rounded-lg p-4 border border-dark-700">
+        <h3 className="text-sm font-medium text-dark-300 mb-4">Trigger History</h3>
         <TriggerHistory
           triggers={triggers}
           total={totalTriggers}

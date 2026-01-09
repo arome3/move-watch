@@ -19,8 +19,12 @@ export default withAuth(
 export const config = {
   matcher: [
     // Protected routes
+    '/simulator/:path*',
     '/dashboard/:path*',
+    '/alerts-and-actions/:path*',
     '/alerts/:path*',
+    '/actions/:path*',
+    '/channels/:path*',
     '/settings/:path*',
   ],
 };

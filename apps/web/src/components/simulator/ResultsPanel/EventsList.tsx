@@ -12,7 +12,7 @@ export function EventsList({ events }: EventsListProps) {
 
   if (events.length === 0) {
     return (
-      <div className="text-center py-8 text-slate-500">
+      <div className="text-center py-8 text-dark-500">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="h-12 w-12 mx-auto mb-3 opacity-50"
@@ -34,30 +34,30 @@ export function EventsList({ events }: EventsListProps) {
 
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-medium text-slate-300">
-        Events <span className="text-slate-500">({events.length})</span>
+      <h3 className="text-sm font-medium text-dark-300">
+        Events <span className="text-dark-500">({events.length})</span>
       </h3>
 
       <div className="space-y-2">
         {events.map((event, index) => (
           <div
             key={index}
-            className="border border-slate-700 rounded-lg overflow-hidden"
+            className="border border-dark-700 rounded-lg overflow-hidden"
           >
             <button
               onClick={() => setExpandedIndex(expandedIndex === index ? null : index)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-slate-800/50
-                        hover:bg-slate-800 transition-colors text-left"
+              className="w-full flex items-center justify-between px-4 py-3 bg-dark-800/50
+                        hover:bg-dark-800 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-500 font-mono">#{event.sequenceNumber}</span>
+                <span className="text-xs text-dark-500 font-mono">#{event.sequenceNumber}</span>
                 <code className="text-sm text-primary-400 font-mono truncate max-w-[300px]">
                   {event.type.split('::').slice(-1)[0]}
                 </code>
               </div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-4 w-4 text-slate-500 transition-transform ${
+                className={`h-4 w-4 text-dark-500 transition-transform ${
                   expandedIndex === index ? 'rotate-180' : ''
                 }`}
                 viewBox="0 0 20 20"
@@ -72,9 +72,9 @@ export function EventsList({ events }: EventsListProps) {
             </button>
 
             {expandedIndex === index && (
-              <div className="px-4 py-3 border-t border-slate-700 bg-slate-900/50">
-                <p className="text-xs text-slate-500 mb-2 font-mono">{event.type}</p>
-                <pre className="text-xs font-mono text-slate-300 overflow-x-auto">
+              <div className="px-4 py-3 border-t border-dark-700 bg-dark-900/50">
+                <p className="text-xs text-dark-500 mb-2 font-mono">{event.type}</p>
+                <pre className="text-xs font-mono text-dark-300 overflow-x-auto">
                   {JSON.stringify(event.data, null, 2)}
                 </pre>
               </div>

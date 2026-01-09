@@ -36,8 +36,8 @@ function getExplorerUrl(hash: string, network: string): string {
 export function AnomalyList({ anomalies, network }: AnomalyListProps) {
   if (!anomalies || anomalies.length === 0) {
     return (
-      <div className="p-4 bg-slate-800 rounded-lg border border-slate-700">
-        <h4 className="text-sm font-medium text-slate-400 uppercase">
+      <div className="p-4 bg-dark-800 rounded-lg border border-dark-700">
+        <h4 className="text-sm font-medium text-dark-400 uppercase">
           Gas Anomalies
         </h4>
         <div className="mt-4 text-center">
@@ -54,8 +54,8 @@ export function AnomalyList({ anomalies, network }: AnomalyListProps) {
               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <p className="mt-2 text-sm text-slate-500">No anomalies detected</p>
-          <p className="text-xs text-slate-600">
+          <p className="mt-2 text-sm text-dark-500">No anomalies detected</p>
+          <p className="text-xs text-dark-600">
             Anomalies are transactions with gas &gt; 2x average
           </p>
         </div>
@@ -64,9 +64,9 @@ export function AnomalyList({ anomalies, network }: AnomalyListProps) {
   }
 
   return (
-    <div className="p-4 bg-slate-800 rounded-lg border border-slate-700">
+    <div className="p-4 bg-dark-800 rounded-lg border border-dark-700">
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-medium text-slate-400 uppercase">
+        <h4 className="text-sm font-medium text-dark-400 uppercase">
           Gas Anomalies
         </h4>
         <span className="px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-400 rounded">
@@ -80,14 +80,14 @@ export function AnomalyList({ anomalies, network }: AnomalyListProps) {
             href={getExplorerUrl(anomaly.transactionHash, network)}
             target="_blank"
             rel="noopener noreferrer"
-            className="block p-3 bg-slate-900 rounded-lg border border-red-500/20 hover:border-red-500/50 transition-colors"
+            className="block p-3 bg-dark-900 rounded-lg border border-red-500/20 hover:border-red-500/50 transition-colors"
           >
             <div className="flex items-center justify-between">
               <div>
                 <code className="text-sm text-white font-mono">
                   {truncateHash(anomaly.transactionHash)}
                 </code>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-dark-500 mt-0.5">
                   {anomaly.functionName} • {formatTimestamp(anomaly.timestamp)}
                 </p>
               </div>
@@ -95,7 +95,7 @@ export function AnomalyList({ anomalies, network }: AnomalyListProps) {
                 <p className="text-sm font-bold text-red-400">
                   {anomaly.gasUsed.toLocaleString()}
                 </p>
-                <p className="text-xs text-slate-500">gas used</p>
+                <p className="text-xs text-dark-500">gas used</p>
               </div>
             </div>
           </a>

@@ -6,6 +6,7 @@ import { AlertTypeIcon, getConditionLabel, getConditionColor } from './AlertType
 
 interface AlertCardProps {
   alert: AlertResponse;
+  onView?: (id: string) => void;
   onToggle: (id: string, enabled: boolean) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -16,6 +17,7 @@ interface AlertCardProps {
 
 export function AlertCard({
   alert,
+  onView,
   onToggle,
   onEdit,
   onDelete,
@@ -35,45 +37,45 @@ export function AlertCard({
   };
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 hover:border-slate-600 transition-colors">
+    <div className="bg-dark-800 border border-dark-700 rounded-lg p-4 hover:border-dark-600 transition-colors">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg bg-slate-700/50 ${getConditionColor(alert.conditionType)}`}>
+          <div className={`p-2 rounded-lg bg-dark-700/50 ${getConditionColor(alert.conditionType)}`}>
             <AlertTypeIcon type={alert.conditionType} className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-medium text-slate-100">{alert.name}</h3>
-            <p className="text-sm text-slate-400">{getConditionLabel(alert.conditionType)}</p>
+            <h3 className="font-medium text-dark-100">{alert.name}</h3>
+            <p className="text-sm text-dark-400">{getConditionLabel(alert.conditionType)}</p>
           </div>
         </div>
         <AlertStatusBadge enabled={alert.enabled} size="sm" />
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-4 py-3 border-t border-b border-slate-700">
+      <div className="grid grid-cols-3 gap-4 mb-4 py-3 border-t border-b border-dark-700">
         <div>
-          <p className="text-xs text-slate-500 mb-1">Network</p>
-          <p className="text-sm text-slate-300 capitalize">{alert.network}</p>
+          <p className="text-xs text-dark-500 mb-1">Network</p>
+          <p className="text-sm text-dark-300 capitalize">{alert.network}</p>
         </div>
         <div>
-          <p className="text-xs text-slate-500 mb-1">Last Triggered</p>
-          <p className="text-sm text-slate-300">{formatDate(alert.lastTriggeredAt)}</p>
+          <p className="text-xs text-dark-500 mb-1">Last Triggered</p>
+          <p className="text-sm text-dark-300">{formatDate(alert.lastTriggeredAt)}</p>
         </div>
         <div>
-          <p className="text-xs text-slate-500 mb-1">Triggers</p>
-          <p className="text-sm text-slate-300">{alert.triggerCount}</p>
+          <p className="text-xs text-dark-500 mb-1">Triggers</p>
+          <p className="text-sm text-dark-300">{alert.triggerCount}</p>
         </div>
       </div>
 
       {/* Channels */}
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-xs text-slate-500">Channels:</span>
+        <span className="text-xs text-dark-500">Channels:</span>
         <div className="flex gap-1">
           {alert.channels.map((channel) => (
             <span
               key={channel.id}
-              className="px-2 py-0.5 text-xs bg-slate-700 text-slate-300 rounded capitalize"
+              className="px-2 py-0.5 text-xs bg-dark-700 text-dark-300 rounded capitalize"
             >
               {channel.type}
             </span>
@@ -90,7 +92,7 @@ export function AlertCard({
           className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors
                      ${
                        alert.enabled
-                         ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                         ? 'bg-dark-700 text-dark-300 hover:bg-dark-600'
                          : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
                      }
                      disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -102,8 +104,8 @@ export function AlertCard({
         <button
           onClick={() => onTest(alert.id)}
           disabled={isTesting || !alert.enabled}
-          className="px-3 py-2 text-sm font-medium bg-slate-700 text-slate-300 rounded-lg
-                     hover:bg-slate-600 transition-colors
+          className="px-3 py-2 text-sm font-medium bg-dark-700 text-dark-300 rounded-lg
+                     hover:bg-dark-600 transition-colors
                      disabled:opacity-50 disabled:cursor-not-allowed"
           title={!alert.enabled ? 'Enable alert to test' : 'Send test notification'}
         >
@@ -131,8 +133,8 @@ export function AlertCard({
         {/* Edit Button */}
         <button
           onClick={() => onEdit(alert.id)}
-          className="px-3 py-2 text-sm font-medium bg-slate-700 text-slate-300 rounded-lg
-                     hover:bg-slate-600 transition-colors"
+          className="px-3 py-2 text-sm font-medium bg-dark-700 text-dark-300 rounded-lg
+                     hover:bg-dark-600 transition-colors"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

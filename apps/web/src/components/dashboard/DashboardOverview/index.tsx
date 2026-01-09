@@ -12,6 +12,7 @@ interface DashboardOverviewProps {
   onPeriodChange: (period: DashboardPeriod) => void;
   network?: Network;
   moduleAddress?: string;
+  sender?: string; // Filter by wallet address
 }
 
 export function DashboardOverview({
@@ -19,10 +20,11 @@ export function DashboardOverview({
   onPeriodChange,
   network = 'testnet',
   moduleAddress,
+  sender,
 }: DashboardOverviewProps) {
   const { data: stats, isLoading, refetch, dataUpdatedAt } = useQuery({
-    queryKey: ['dashboard-stats', period, network, moduleAddress],
-    queryFn: () => fetchDashboardStats(period, network, moduleAddress),
+    queryKey: ['dashboard-stats', period, network, moduleAddress, sender],
+    queryFn: () => fetchDashboardStats(period, network, moduleAddress, sender),
     refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
@@ -86,14 +88,14 @@ function DashboardOverviewSkeleton() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="h-8 w-32 bg-slate-800 rounded animate-pulse" />
-        <div className="h-10 w-64 bg-slate-800 rounded animate-pulse" />
+        <div className="h-8 w-32 bg-dark-800 rounded animate-pulse" />
+        <div className="h-10 w-64 bg-dark-800 rounded animate-pulse" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-28 bg-slate-800 rounded-lg border border-slate-700 animate-pulse"
+            className="h-28 bg-dark-800 rounded-lg border border-dark-700 animate-pulse"
           />
         ))}
       </div>

@@ -9,13 +9,13 @@ interface StatusFilterProps {
 
 export function StatusFilter({ value, onChange }: StatusFilterProps) {
   return (
-    <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+    <div className="flex items-center gap-1 bg-dark-800 rounded-lg p-1">
       <button
         onClick={() => onChange('all')}
         className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
           value === 'all'
-            ? 'bg-slate-700 text-white'
-            : 'text-slate-400 hover:text-white'
+            ? 'bg-dark-700 text-white'
+            : 'text-dark-400 hover:text-white'
         }`}
       >
         All
@@ -25,7 +25,7 @@ export function StatusFilter({ value, onChange }: StatusFilterProps) {
         className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
           value === 'success'
             ? 'bg-green-500/20 text-green-400'
-            : 'text-slate-400 hover:text-green-400'
+            : 'text-dark-400 hover:text-green-400'
         }`}
       >
         Success
@@ -35,7 +35,7 @@ export function StatusFilter({ value, onChange }: StatusFilterProps) {
         className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
           value === 'failed'
             ? 'bg-red-500/20 text-red-400'
-            : 'text-slate-400 hover:text-red-400'
+            : 'text-dark-400 hover:text-red-400'
         }`}
       >
         Failed

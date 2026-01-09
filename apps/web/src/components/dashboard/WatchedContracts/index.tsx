@@ -32,8 +32,8 @@ export function WatchedContracts() {
   };
 
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700">
-      <div className="p-4 border-b border-slate-700 flex items-center justify-between">
+    <div className="bg-dark-800 rounded-lg border border-dark-700">
+      <div className="p-4 border-b border-dark-700 flex items-center justify-between">
         <h3 className="text-lg font-semibold text-white">Watched Contracts</h3>
         <button
           onClick={() => setShowAddModal(true)}
@@ -91,7 +91,7 @@ interface ContractCardProps {
 
 function ContractCard({ contract, onRemove, isRemoving }: ContractCardProps) {
   return (
-    <div className="flex items-center justify-between p-3 bg-slate-900 rounded-lg border border-slate-700">
+    <div className="flex items-center justify-between p-3 bg-dark-900 rounded-lg border border-dark-700">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           {contract.name && (
@@ -109,14 +109,14 @@ function ContractCard({ contract, onRemove, isRemoving }: ContractCardProps) {
             {contract.network}
           </span>
         </div>
-        <code className="text-xs text-slate-400 font-mono truncate block mt-1">
+        <code className="text-xs text-dark-400 font-mono truncate block mt-1">
           {contract.moduleAddress}
         </code>
       </div>
       <button
         onClick={onRemove}
         disabled={isRemoving}
-        className="ml-4 p-2 text-slate-400 hover:text-red-400 transition-colors disabled:opacity-50"
+        className="ml-4 p-2 text-dark-400 hover:text-red-400 transition-colors disabled:opacity-50"
       >
         <svg
           className="w-4 h-4"
@@ -142,7 +142,7 @@ function ContractListSkeleton() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-16 bg-slate-900 rounded-lg border border-slate-700 animate-pulse"
+          className="h-16 bg-dark-900 rounded-lg border border-dark-700 animate-pulse"
         />
       ))}
     </div>
@@ -153,7 +153,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="text-center py-8">
       <svg
-        className="w-12 h-12 mx-auto text-slate-600"
+        className="w-12 h-12 mx-auto text-dark-600"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -165,10 +165,10 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
           d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
         />
       </svg>
-      <h4 className="mt-4 text-lg font-medium text-slate-300">
+      <h4 className="mt-4 text-lg font-medium text-dark-300">
         No contracts watched
       </h4>
-      <p className="mt-2 text-sm text-slate-500">
+      <p className="mt-2 text-sm text-dark-500">
         Add contracts to monitor their transactions and events
       </p>
       <button

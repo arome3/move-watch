@@ -1,9 +1,12 @@
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@movewatch/database';
-import type { NextAuthOptions } from 'next-auth';
+import type { NextAuthOptions, User } from 'next-auth';
 import type { Adapter } from 'next-auth/adapters';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import EmailProvider from 'next-auth/providers/email';
+import GitHubProvider from 'next-auth/providers/github';
+import GoogleProvider from 'next-auth/providers/google';
+import * as jose from 'jose';
 import { verifyWalletSignature } from './wallet';
 
 declare module 'next-auth' {
@@ -14,13 +17,14 @@ declare module 'next-auth' {
       name?: string | null;
       image?: string | null;
       walletAddress?: string | null;
-      tier: 'free' | 'pro' | 'enterprise';
+      tier: string;
     };
+    accessToken?: string;
   }
 
   interface User {
     walletAddress?: string | null;
-    tier: 'free' | 'pro' | 'enterprise';
+    tier: string;
   }
 }
 
@@ -28,7 +32,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
     walletAddress?: string | null;
-    tier: 'free' | 'pro' | 'enterprise';
+    tier: string;
   }
 }
 
@@ -43,11 +47,44 @@ export const authOptions: NextAuthOptions = {
     error: '/auth/error',
   },
   providers: [
-    // Email magic link provider
-    EmailProvider({
-      server: process.env.EMAIL_SERVER,
-      from: process.env.EMAIL_FROM || 'noreply@movewatch.io',
-    }),
+    // GitHub OAuth provider
+    ...(process.env.GITHUB_ID && process.env.GITHUB_SECRET
+      ? [
+          GitHubProvider({
+            clientId: process.env.GITHUB_ID,
+            clientSecret: process.env.GITHUB_SECRET,
+          }),
+        ]
+      : []),
+
+    // Google OAuth provider
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
+
+    // Email magic link provider (using Resend)
+    ...(process.env.RESEND_API_KEY
+      ? [
+          EmailProvider({
+            server: {
+              host: 'smtp.resend.com',
+              port: 465,
+              secure: true,
+              auth: {
+                user: 'resend',
+                pass: process.env.RESEND_API_KEY,
+              },
+            },
+            from: process.env.EMAIL_FROM || 'MoveWatch <noreply@movewatch.io>',
+          }),
+        ]
+      : []),
+
     // Wallet authentication provider
     CredentialsProvider({
       id: 'wallet',
@@ -83,7 +120,7 @@ export const authOptions: NextAuthOptions = {
             data: {
               walletAddress: credentials.address,
               email: null,
-              tier: 'free',
+              tier: 'FREE',
             },
           });
         }
@@ -94,8 +131,8 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           image: user.image,
           walletAddress: user.walletAddress,
-          tier: user.tier as 'free' | 'pro' | 'enterprise',
-        };
+          tier: user.tier.toLowerCase(),
+        } as unknown as User;
       },
     }),
   ],
@@ -105,7 +142,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.walletAddress = user.walletAddress;
-        token.tier = user.tier || 'free';
+        token.tier = (user.tier || 'free').toLowerCase();
       }
 
       // For wallet provider, ensure we have the user ID
@@ -121,6 +158,28 @@ export const authOptions: NextAuthOptions = {
         session.user.walletAddress = token.walletAddress;
         session.user.tier = token.tier;
       }
+
+      // Create a JWS-signed JWT for API authentication
+      // This is compatible with jose.jwtVerify() on the API side
+      if (token && process.env.NEXTAUTH_SECRET) {
+        try {
+          const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+          session.accessToken = await new jose.SignJWT({
+            sub: token.id,
+            id: token.id,
+            email: token.email,
+            walletAddress: token.walletAddress,
+            tier: token.tier,
+          })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuedAt()
+            .setExpirationTime('30d')
+            .sign(secret);
+        } catch (e) {
+          console.error('Failed to sign JWT for session:', e);
+        }
+      }
+
       return session;
     },
     async signIn({ user, account }) {
@@ -131,6 +190,11 @@ export const authOptions: NextAuthOptions = {
 
       // For email provider, allow all verified emails
       if (account?.provider === 'email') {
+        return true;
+      }
+
+      // For OAuth providers (GitHub, Google), allow sign in
+      if (account?.provider === 'github' || account?.provider === 'google') {
         return true;
       }
 

@@ -1,12 +1,11 @@
-import { Router } from 'express';
+import { Router, type Router as RouterType } from 'express';
 import { z } from 'zod';
 import * as alertService from '../services/alerts.js';
 import { testNotificationChannels } from '../services/notifications.js';
+// Note: Alerts use subscription-based access, not x402 micropayments
+import { requireAuth, type AuthenticatedRequest } from '../middleware/auth.js';
 
-const router = Router();
-
-// Mock user ID for development (auth deferred)
-const MOCK_USER_ID = alertService.MOCK_USER_ID;
+const router: RouterType = Router();
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -36,45 +35,41 @@ const conditionSchema = z.discriminatedUnion('type', [
     moduleAddress: z.string().min(1, 'Module address is required'),
     thresholdMultiplier: z.number().min(1, 'Multiplier must be at least 1'),
   }),
-]);
-
-// Channel schemas using discriminated union
-const channelSchema = z.discriminatedUnion('type', [
+  // New condition types for Movement developers
   z.object({
-    type: z.literal('discord'),
-    config: z.object({
-      webhookUrl: z.string().url('Invalid Discord webhook URL'),
-    }),
+    type: z.literal('function_call'),
+    moduleAddress: z.string().min(1, 'Module address is required'),
+    moduleName: z.string().min(1, 'Module name is required'),
+    functionName: z.string().min(1, 'Function name is required'),
+    trackSuccess: z.boolean().optional().default(true),
+    trackFailed: z.boolean().optional().default(false),
+    filters: z.object({
+      sender: z.string().regex(/^0x[a-fA-F0-9]{1,64}$/).optional(),
+      minGas: z.number().int().min(0).optional(),
+    }).optional(),
   }),
   z.object({
-    type: z.literal('slack'),
-    config: z.object({
-      webhookUrl: z.string().url('Invalid Slack webhook URL'),
-    }),
+    type: z.literal('token_transfer'),
+    tokenType: z.string().min(1, 'Token type is required'),
+    direction: z.enum(['in', 'out', 'both']),
+    address: z.string().regex(/^0x[a-fA-F0-9]{1,64}$/, 'Invalid address format'),
+    minAmount: z.string().regex(/^\d+$/, 'Min amount must be a numeric string').optional(),
+    maxAmount: z.string().regex(/^\d+$/, 'Max amount must be a numeric string').optional(),
   }),
   z.object({
-    type: z.literal('telegram'),
-    config: z.object({
-      botToken: z.string().min(1, 'Bot token is required'),
-      chatId: z.string().min(1, 'Chat ID is required'),
-    }),
-  }),
-  z.object({
-    type: z.literal('webhook'),
-    config: z.object({
-      url: z.string().url('Invalid webhook URL'),
-      authHeader: z.string().optional(),
-      authValue: z.string().optional(),
-    }),
+    type: z.literal('large_transaction'),
+    tokenType: z.string().min(1, 'Token type is required'),
+    threshold: z.string().regex(/^\d+$/, 'Threshold must be a numeric string'),
+    addresses: z.array(z.string().regex(/^0x[a-fA-F0-9]{1,64}$/)).optional(),
   }),
 ]);
 
-// Create alert schema
+// Create alert schema - now uses channelIds instead of inline channels
 const createAlertSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   network: z.enum(['mainnet', 'testnet', 'devnet']).optional(),
   condition: conditionSchema,
-  channels: z.array(channelSchema).min(1, 'At least one channel required').max(5, 'Maximum 5 channels'),
+  channelIds: z.array(z.string()).min(1, 'At least one channel required').max(10, 'Maximum 10 channels'),
   cooldownSeconds: z.number().int().min(0).max(86400).optional(),
 });
 
@@ -84,7 +79,7 @@ const updateAlertSchema = z.object({
   enabled: z.boolean().optional(),
   network: z.enum(['mainnet', 'testnet', 'devnet']).optional(),
   condition: conditionSchema.optional(),
-  channels: z.array(channelSchema).min(1).max(5).optional(),
+  channelIds: z.array(z.string()).min(1).max(10).optional(),
   cooldownSeconds: z.number().int().min(0).max(86400).optional(),
 });
 
@@ -102,9 +97,10 @@ const paginationSchema = z.object({
  * GET /alerts
  * List all alerts for the authenticated user
  */
-router.get('/', async (req, res, next) => {
+router.get('/', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
-    const alerts = await alertService.getAlerts(MOCK_USER_ID);
+    const userId = req.user!.id;
+    const alerts = await alertService.getAlerts(userId);
 
     res.json({
       alerts,
@@ -118,9 +114,12 @@ router.get('/', async (req, res, next) => {
 /**
  * POST /alerts
  * Create a new alert
+ *
+ * Access: Subscription-based (limit based on plan)
  */
-router.post('/', async (req, res, next) => {
+router.post('/', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
+    const userId = req.user!.id;
     const parseResult = createAlertSchema.safeParse(req.body);
 
     if (!parseResult.success) {
@@ -136,7 +135,7 @@ router.post('/', async (req, res, next) => {
       });
     }
 
-    const alert = await alertService.createAlert(MOCK_USER_ID, parseResult.data);
+    const alert = await alertService.createAlert(userId, parseResult.data);
 
     res.status(201).json(alert);
   } catch (error) {
@@ -148,11 +147,12 @@ router.post('/', async (req, res, next) => {
  * GET /alerts/:id
  * Get a specific alert
  */
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
     const { id } = req.params;
+    const userId = req.user!.id;
 
-    const alert = await alertService.getAlertById(id, MOCK_USER_ID);
+    const alert = await alertService.getAlertById(id, userId);
 
     if (!alert) {
       return res.status(404).json({
@@ -173,9 +173,10 @@ router.get('/:id', async (req, res, next) => {
  * PATCH /alerts/:id
  * Update an existing alert
  */
-router.patch('/:id', async (req, res, next) => {
+router.patch('/:id', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
     const { id } = req.params;
+    const userId = req.user!.id;
 
     const parseResult = updateAlertSchema.safeParse(req.body);
 
@@ -192,7 +193,7 @@ router.patch('/:id', async (req, res, next) => {
       });
     }
 
-    const alert = await alertService.updateAlert(id, MOCK_USER_ID, parseResult.data);
+    const alert = await alertService.updateAlert(id, userId, parseResult.data);
 
     if (!alert) {
       return res.status(404).json({
@@ -213,11 +214,12 @@ router.patch('/:id', async (req, res, next) => {
  * DELETE /alerts/:id
  * Delete an alert
  */
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
     const { id } = req.params;
+    const userId = req.user!.id;
 
-    const deleted = await alertService.deleteAlert(id, MOCK_USER_ID);
+    const deleted = await alertService.deleteAlert(id, userId);
 
     if (!deleted) {
       return res.status(404).json({
@@ -238,28 +240,23 @@ router.delete('/:id', async (req, res, next) => {
  * POST /alerts/:id/test
  * Send a test notification to all configured channels
  */
-router.post('/:id/test', async (req, res, next) => {
+router.post('/:id/test', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
     const { id } = req.params;
+    const userId = req.user!.id;
 
-    // Get the alert to access its channels
-    const alert = await alertService.getAlertById(id, MOCK_USER_ID);
-
-    if (!alert) {
-      return res.status(404).json({
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Alert not found',
-        },
-      });
-    }
-
-    // We need the full channel configs, not just the summary
-    // Fetch the alert with full channel data from the database
+    // Fetch the alert with full channel data via junction table
     const { prisma } = await import('../lib/prisma.js');
-    const fullAlert = await prisma.alert.findUnique({
-      where: { id },
-      include: { channels: true },
+    const fullAlert = await prisma.alert.findFirst({
+      where: { id, userId },
+      include: {
+        alertChannels: {
+          where: { enabled: true },
+          include: {
+            channel: true,
+          },
+        },
+      },
     });
 
     if (!fullAlert) {
@@ -271,11 +268,20 @@ router.post('/:id/test', async (req, res, next) => {
       });
     }
 
+    if (fullAlert.alertChannels.length === 0) {
+      return res.status(400).json({
+        error: {
+          code: 'NO_CHANNELS',
+          message: 'Alert has no enabled channels configured',
+        },
+      });
+    }
+
     // Test all channels
     const results = await testNotificationChannels(
-      fullAlert.channels.map((c) => ({
-        type: c.type,
-        config: c.config,
+      fullAlert.alertChannels.map((ac) => ({
+        type: ac.channel.type,
+        config: ac.channel.config,
       }))
     );
 
@@ -289,16 +295,17 @@ router.post('/:id/test', async (req, res, next) => {
  * GET /alerts/:id/triggers
  * Get trigger history for an alert
  */
-router.get('/:id/triggers', async (req, res, next) => {
+router.get('/:id/triggers', requireAuth, async (req: AuthenticatedRequest, res, next) => {
   try {
     const { id } = req.params;
+    const userId = req.user!.id;
 
     const parseResult = paginationSchema.safeParse(req.query);
     const { limit, offset } = parseResult.success
       ? parseResult.data
       : { limit: 10, offset: 0 };
 
-    const result = await alertService.getTriggers(id, MOCK_USER_ID, limit, offset);
+    const result = await alertService.getTriggers(id, userId, limit, offset);
 
     if (!result) {
       return res.status(404).json({

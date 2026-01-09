@@ -14,14 +14,14 @@ export function NetworkSelector() {
 
   return (
     <div className="space-y-2">
-      <label htmlFor="network" className="block text-sm font-medium text-slate-300">
+      <label htmlFor="network" className="block text-sm font-medium text-dark-300">
         Network
       </label>
       <select
         id="network"
         value={network}
         onChange={(e) => setNetwork(e.target.value as Network)}
-        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100
+        className="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-sm text-dark-100
                    focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                    transition-colors"
       >
@@ -31,7 +31,7 @@ export function NetworkSelector() {
           </option>
         ))}
       </select>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-dark-500">
         Select the Movement Network to simulate against
       </p>
     </div>

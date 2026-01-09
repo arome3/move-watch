@@ -9,7 +9,7 @@ export function TypeArguments() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-slate-300">
+        <label className="block text-sm font-medium text-dark-300">
           Type Arguments
         </label>
         <button
@@ -22,26 +22,26 @@ export function TypeArguments() {
       </div>
 
       {typeArguments.length === 0 ? (
-        <p className="text-sm text-slate-500 italic">No type arguments</p>
+        <p className="text-sm text-dark-500 italic">No type arguments</p>
       ) : (
         <div className="space-y-2">
           {typeArguments.map((arg, index) => (
             <div key={index} className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 w-6">{index + 1}.</span>
+              <span className="text-xs text-dark-500 w-6">{index + 1}.</span>
               <input
                 type="text"
                 value={arg}
                 onChange={(e) => setTypeArgument(index, e.target.value)}
                 placeholder="0x1::aptos_coin::AptosCoin"
-                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm
-                          font-mono text-slate-100 placeholder:text-slate-600
+                className="flex-1 bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-sm
+                          font-mono text-dark-100 placeholder:text-dark-600
                           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                           transition-colors"
               />
               <button
                 type="button"
                 onClick={() => removeTypeArgument(index)}
-                className="p-2 text-slate-500 hover:text-red-400 transition-colors"
+                className="p-2 text-dark-500 hover:text-red-400 transition-colors"
                 aria-label="Remove type argument"
               >
                 <svg
@@ -62,7 +62,7 @@ export function TypeArguments() {
         </div>
       )}
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-dark-500">
         Generic type parameters for the function (e.g., coin types)
       </p>
     </div>

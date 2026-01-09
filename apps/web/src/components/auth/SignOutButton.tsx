@@ -19,7 +19,7 @@ export function SignOutButton({
     return (
       <button
         onClick={handleSignOut}
-        className={`text-slate-400 hover:text-white transition-colors ${className}`}
+        className={`text-dark-400 hover:text-white transition-colors ${className}`}
       >
         Sign Out
       </button>
@@ -29,7 +29,7 @@ export function SignOutButton({
   return (
     <button
       onClick={handleSignOut}
-      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 hover:text-white transition-colors ${className}`}
+      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-dark-300 bg-dark-800 border border-dark-700 rounded-lg hover:bg-dark-700 hover:text-white transition-colors ${className}`}
     >
       <svg
         className="w-4 h-4"

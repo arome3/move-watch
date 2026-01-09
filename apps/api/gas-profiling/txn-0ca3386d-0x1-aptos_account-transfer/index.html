@@ -1,0 +1,1217 @@
+<!-- Copyright © Aptos Foundation -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gas Report - 0x1-aptos_account-transfer</title>
+    <style>
+        /* Add your custom CSS styles here */
+        body {
+            background-color: white;
+            color: black;
+        }
+
+        section {
+            margin-bottom: 60px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        td {
+            padding: 2px;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        h2 {
+            background: rgb(220, 220, 220);
+        }
+
+        h3 {
+            background: rgb(240, 240, 240);
+        }
+
+        .flamegraph {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body onload="init();">
+    <header>
+        <h1>Gas Report - 0x1-aptos_account-transfer</h1>
+    </header>
+
+    <section>
+        <h2>Flamegraphs</h2>
+        <object data="assets/exec_io.svg" type="image/svg+xml" class="flamegraph"></object>
+
+        (No storage graph to show.)
+    </section>
+
+    <section>
+        <h2>Cost Break-down</h2>
+        The Aptos network charges a transaction in two parts: (1) execution and IO, and (2) storage.
+
+        <h3> Execution & IO</h3>
+        The execution & IO costs cover the transient resources used for executing the transaction
+        and are quantified in gas units, meaning that the final fee incurred will be subject to the gas unit
+        price established by the gas fee market. This allows one to benefit from low transaction fees when
+        the network is not at capacity.
+
+        <h4>Intrinsic Cost</h4>
+        55.2 gas units
+        , 27.24% of the total cost for execution & IO.
+
+
+        <h4>Dependencies</h4>
+        (No dependencies to show. System dependencies are excluded.)
+        <h4>Execution</h4>
+        <table>
+            <tr>
+                <th><b>Operation</b></th>
+                <th style="text-align: right"><b>Number of Hits</b></th>
+                <th style="text-align: right"><b>Cost in Gas Units</b></th>
+                <th style="text-align: right"><b>Percentage</b></th>
+            </tr>
+            <tr>
+                <td>0x1::table::contains_box&lt;0x1::type_info::TypeInfo,0x1::object::Object&lt;0x1::fungible_asset::Metadata&gt;,0x1::table::Box&lt;0x1::object::Object&lt;0x1::fungible_asset::Metadata&gt;&gt;&gt;</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">18.544</td>
+                <td style="text-align: right">9.15%</td>
+            </tr>
+            <tr>
+                <td>call_generic</td>
+                <td style="text-align: right">21</td>
+                <td style="text-align: right">2.41004</td>
+                <td style="text-align: right">1.19%</td>
+            </tr>
+            <tr>
+                <td>create_ty</td>
+                <td style="text-align: right">198</td>
+                <td style="text-align: right">2.328</td>
+                <td style="text-align: right">1.15%</td>
+            </tr>
+            <tr>
+                <td>call</td>
+                <td style="text-align: right">17</td>
+                <td style="text-align: right">1.61684</td>
+                <td style="text-align: right">0.80%</td>
+            </tr>
+            <tr>
+                <td>ld_const</td>
+                <td style="text-align: right">10</td>
+                <td style="text-align: right">1.297</td>
+                <td style="text-align: right">0.64%</td>
+            </tr>
+            <tr>
+                <td>copy_loc</td>
+                <td style="text-align: right">43</td>
+                <td style="text-align: right">0.77336</td>
+                <td style="text-align: right">0.38%</td>
+            </tr>
+            <tr>
+                <td>move_loc</td>
+                <td style="text-align: right">66</td>
+                <td style="text-align: right">0.58212</td>
+                <td style="text-align: right">0.29%</td>
+            </tr>
+            <tr>
+                <td>0x1::event::write_to_event_store&lt;0x1::coin::DepositEvent&gt;</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.49772</td>
+                <td style="text-align: right">0.25%</td>
+            </tr>
+            <tr>
+                <td>0x1::event::write_to_event_store&lt;0x1::coin::WithdrawEvent&gt;</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.49772</td>
+                <td style="text-align: right">0.25%</td>
+            </tr>
+            <tr>
+                <td>read_ref</td>
+                <td style="text-align: right">18</td>
+                <td style="text-align: right">0.4774</td>
+                <td style="text-align: right">0.24%</td>
+            </tr>
+            <tr>
+                <td>st_loc</td>
+                <td style="text-align: right">33</td>
+                <td style="text-align: right">0.29106</td>
+                <td style="text-align: right">0.14%</td>
+            </tr>
+            <tr>
+                <td>imm_borrow_field_generic</td>
+                <td style="text-align: right">15</td>
+                <td style="text-align: right">0.2205</td>
+                <td style="text-align: right">0.11%</td>
+            </tr>
+            <tr>
+                <td>br_false</td>
+                <td style="text-align: right">23</td>
+                <td style="text-align: right">0.20286</td>
+                <td style="text-align: right">0.10%</td>
+            </tr>
+            <tr>
+                <td>imm_borrow_global</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.14704</td>
+                <td style="text-align: right">0.07%</td>
+            </tr>
+            <tr>
+                <td>ret</td>
+                <td style="text-align: right">30</td>
+                <td style="text-align: right">0.132</td>
+                <td style="text-align: right">0.07%</td>
+            </tr>
+            <tr>
+                <td>0x1::table::borrow_box&lt;0x1::type_info::TypeInfo,0x1::object::Object&lt;0x1::fungible_asset::Metadata&gt;,0x1::table::Box&lt;0x1::object::Object&lt;0x1::fungible_asset::Metadata&gt;&gt;&gt;</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.12638</td>
+                <td style="text-align: right">0.06%</td>
+            </tr>
+            <tr>
+                <td>neq</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.11896</td>
+                <td style="text-align: right">0.06%</td>
+            </tr>
+            <tr>
+                <td>mut_borrow_field_generic</td>
+                <td style="text-align: right">8</td>
+                <td style="text-align: right">0.1176</td>
+                <td style="text-align: right">0.06%</td>
+            </tr>
+            <tr>
+                <td>exists_generic</td>
+                <td style="text-align: right">6</td>
+                <td style="text-align: right">0.11028</td>
+                <td style="text-align: right">0.05%</td>
+            </tr>
+            <tr>
+                <td>imm_borrow_field</td>
+                <td style="text-align: right">7</td>
+                <td style="text-align: right">0.1029</td>
+                <td style="text-align: right">0.05%</td>
+            </tr>
+            <tr>
+                <td>vec_imm_borrow</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.09704</td>
+                <td style="text-align: right">0.05%</td>
+            </tr>
+            <tr>
+                <td>ld_u64</td>
+                <td style="text-align: right">17</td>
+                <td style="text-align: right">0.0748</td>
+                <td style="text-align: right">0.04%</td>
+            </tr>
+            <tr>
+                <td>exists</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.07352</td>
+                <td style="text-align: right">0.04%</td>
+            </tr>
+            <tr>
+                <td>mut_borrow_global_generic</td>
+                <td style="text-align: right">2</td>
+                <td style="text-align: right">0.07352</td>
+                <td style="text-align: right">0.04%</td>
+            </tr>
+            <tr>
+                <td>vec_len</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.06464</td>
+                <td style="text-align: right">0.03%</td>
+            </tr>
+            <tr>
+                <td>0x1::type_info::type_of&lt;0x1::aptos_coin::AptosCoin&gt;</td>
+                <td style="text-align: right">2</td>
+                <td style="text-align: right">0.0628</td>
+                <td style="text-align: right">0.03%</td>
+            </tr>
+            <tr>
+                <td>write_ref</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.0588</td>
+                <td style="text-align: right">0.03%</td>
+            </tr>
+            <tr>
+                <td>0x1::bcs::to_bytes&lt;0x1::guid::GUID&gt;</td>
+                <td style="text-align: right">2</td>
+                <td style="text-align: right">0.0576</td>
+                <td style="text-align: right">0.03%</td>
+            </tr>
+            <tr>
+                <td>pack</td>
+                <td style="text-align: right">3</td>
+                <td style="text-align: right">0.0573</td>
+                <td style="text-align: right">0.03%</td>
+            </tr>
+            <tr>
+                <td>bit_and</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.04704</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>div</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.04704</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>lt</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.04704</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>mod</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.04704</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>shl</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.04704</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>branch</td>
+                <td style="text-align: right">7</td>
+                <td style="text-align: right">0.04116</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>imm_borrow_global_generic</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.03676</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>mut_borrow_global</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.03676</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>add</td>
+                <td style="text-align: right">3</td>
+                <td style="text-align: right">0.03528</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>br_true</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.03528</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>cast_u8</td>
+                <td style="text-align: right">4</td>
+                <td style="text-align: right">0.03528</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>ld_u8</td>
+                <td style="text-align: right">8</td>
+                <td style="text-align: right">0.0352</td>
+                <td style="text-align: right">0.02%</td>
+            </tr>
+            <tr>
+                <td>ge</td>
+                <td style="text-align: right">2</td>
+                <td style="text-align: right">0.02352</td>
+                <td style="text-align: right">0.01%</td>
+            </tr>
+            <tr>
+                <td>gt</td>
+                <td style="text-align: right">2</td>
+                <td style="text-align: right">0.02352</td>
+                <td style="text-align: right">0.01%</td>
+            </tr>
+            <tr>
+                <td>unpack</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.0191</td>
+                <td style="text-align: right">0.01%</td>
+            </tr>
+            <tr>
+                <td>0x1::signer::borrow_address</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.0147</td>
+                <td style="text-align: right">0.01%</td>
+            </tr>
+            <tr>
+                <td>sub</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.01176</td>
+                <td style="text-align: right">0.01%</td>
+            </tr>
+            <tr>
+                <td>imm_borrow_loc</td>
+                <td style="text-align: right">2</td>
+                <td style="text-align: right">0.0088</td>
+                <td style="text-align: right">0.00%</td>
+            </tr>
+            <tr>
+                <td>pop</td>
+                <td style="text-align: right">2</td>
+                <td style="text-align: right">0.00588</td>
+                <td style="text-align: right">0.00%</td>
+            </tr>
+            <tr>
+                <td>nop</td>
+                <td style="text-align: right">7</td>
+                <td style="text-align: right">0.00504</td>
+                <td style="text-align: right">0.00%</td>
+            </tr>
+            <tr>
+                <td>ld_false</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.0044</td>
+                <td style="text-align: right">0.00%</td>
+            </tr>
+            <tr>
+                <td>ld_true</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.0044</td>
+                <td style="text-align: right">0.00%</td>
+            </tr>
+        </table>
+        <h4>State Reads</h4>
+        <table>
+            <tr>
+                <td><b>Resource Name</b></td>
+                <td style="text-align: right"><b>Number of Hits</b></td>
+                <td style="text-align: right"><b>Cost in Gas Units</b></td>
+                <td style="text-align: right"><b>Percentage</b></td>
+            </tr>
+            <tr>
+                <td>0x1::coin::CoinStore&lt;0x1::aptos_coin::AptosCoin&gt;</td>
+                <td style="text-align: right">2</td>
+                <td style="text-align: right">36.83524</td>
+                <td style="text-align: right">18.18%</td>
+            </tr>
+            <tr>
+                <td>0x1::account::Account</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">18.41762</td>
+                <td style="text-align: right">9.09%</td>
+            </tr>
+            <tr>
+                <td>0x1::coin::CoinConversionMap</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">18.41762</td>
+                <td style="text-align: right">9.09%</td>
+            </tr>
+            <tr>
+                <td>0x1::coin::CoinInfo&lt;0x1::aptos_coin::AptosCoin&gt;</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">18.41762</td>
+                <td style="text-align: right">9.09%</td>
+            </tr>
+            <tr>
+                <td>0x1::features::Features</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">18.41762</td>
+                <td style="text-align: right">9.09%</td>
+            </tr>
+        </table>
+        <h4>Ledger Writes</h4>
+        <h5>Transaction Itself</h5>
+        <table>
+            <tr>
+                <td style="text-align: right"><b>Cost in Gas Units</b></td>
+                <td style="text-align: right"><b>Percentage</b></td>
+            </tr>
+            <tr>
+                <td style="text-align: right">0.2937</td>
+                <td style="text-align: right">0.14%</td>
+            </tr>
+        </table>
+        <h5>Events</h5>
+        <table>
+            <tr>
+                <td><b>Event Type</b></td>
+                <td style="text-align: right"><b>Number of Hits</b></td>
+                <td style="text-align: right"><b>Cost in Gas Units</b></td>
+                <td style="text-align: right"><b>Percentage</b></td>
+            </tr>
+            <tr>
+                <td>0x1::coin::WithdrawEvent</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.19402</td>
+                <td style="text-align: right">0.10%</td>
+            </tr>
+            <tr>
+                <td>0x1::coin::DepositEvent</td>
+                <td style="text-align: right">1</td>
+                <td style="text-align: right">0.19224</td>
+                <td style="text-align: right">0.09%</td>
+            </tr>
+        </table>
+        <h5>State Write Ops</h5>
+        <table>
+            <tr>
+                <td><b>Resource Name</b></td>
+                <td style="text-align: right"><b>Number of Hits</b></td>
+                <td style="text-align: right"><b>Cost in Gas Units</b></td>
+                <td style="text-align: right"><b>Percentage</b></td>
+            </tr>
+            <tr>
+                <td>0x1::coin::CoinStore&lt;0x1::aptos_coin::AptosCoin&gt;</td>
+                <td style="text-align: right">2</td>
+                <td style="text-align: right">4.44068</td>
+                <td style="text-align: right">2.19%</td>
+            </tr>
+        </table>
+        <h3>Storage</h3>
+        The storage fees cover the extended-term storage of states and events and are assessed at a fixed price in APT.
+
+        <h4>Transaction</h4>
+        0 APT
+        <h4>States</h4>
+        <table>
+            <tr>
+                <td><b>Path</b></td>
+                <td style="text-align: right"><b>Cost in APT</b></td>
+                <td style="text-align: right"><b>Percentage</b></td>
+                <td style="text-align: right"><b>Refund in APT</b></td>
+                <td style="text-align: right"><b>Percentage</b></td>
+            </tr>
+            <tr>
+                <td>0x1::0x1::coin::CoinStore&lt;0x1::aptos_coin::AptosCoin&gt;</td>
+                <td style="text-align: right">0</td>
+                <td style="text-align: right">/</td>
+                <td style="text-align: right">/</td>
+                <td style="text-align: right">/</td>
+            </tr>
+            <tr>
+                <td>0x74a0..::0x1::coin::CoinStore&lt;0x1::aptos_coin::AptosCoin&gt;</td>
+                <td style="text-align: right">0</td>
+                <td style="text-align: right">/</td>
+                <td style="text-align: right">/</td>
+                <td style="text-align: right">/</td>
+            </tr>
+        </table>
+        <h4>Events</h4>
+        <table>
+            <tr>
+                <td><b>Name</b></td>
+                <td style="text-align: right"><b>Cost in APT</b></td>
+                <td style="text-align: right"><b>Percentage</b></td>
+            </tr>
+            <tr>
+                <td>0x1::coin::WithdrawEvent</td>
+                <td style="text-align: right">0</td>
+                <td style="text-align: right">/</td>
+            </tr>
+            <tr>
+                <td>0x1::coin::DepositEvent</td>
+                <td style="text-align: right">0</td>
+                <td style="text-align: right">/</td>
+            </tr>
+        </table>
+        
+    </section>
+
+    <section>
+        <h2>Full Execution Trace</h2>
+        <div>
+            <pre style="display: inline-block; border:1px solid black; padding: 2px;"><code>execution &amp; IO (gas unit, full trace)                                                                                                                                                                202.6522     100.00%
+    intrinsic                                                                                                                                                                                        55.2         27.24%
+    keyless                                                                                                                                                                                                       
+    0x1::aptos_account::transfer                                                                                                                                                                     142.33156    70.23%
+        create_ty                                                                                                                                                                                    0.016        0.01%
+        create_ty                                                                                                                                                                                    0.008        0.00%
+        create_ty                                                                                                                                                                                    0.008        0.00%
+        create_ty                                                                                                                                                                                    0.008        0.00%
+        copy_loc                                                                                                                                                                                     0.01708      0.01%
+        call                                                                                                                                                                                         0.09554      0.05%
+        0x1::account::exists_at                                                                                                                                                                      38.00716     18.75%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            call                                                                                                                                                                                     0.07352      0.04%
+            0x1::features::is_default_account_resource_enabled                                                                                                                                       19.43608     9.59%
+                ld_u64                                                                                                                                                                               0.0044       0.00%
+                call                                                                                                                                                                                 0.09554      0.05%
+                0x1::features::is_enabled                                                                                                                                                            19.33174     9.54%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    ld_const                                                                                                                                                                         0.1297       0.06%
+                    load&lt;0x1::0x1::features::Features&gt;                                                                                                                                               18.41762     9.09%
+                    exists_generic                                                                                                                                                                   0.01838      0.01%
+                    br_false                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    ld_const                                                                                                                                                                         0.1297       0.06%
+                    imm_borrow_global                                                                                                                                                                0.03676      0.02%
+                    imm_borrow_field                                                                                                                                                                 0.0147       0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    call                                                                                                                                                                             0.1249       0.06%
+                    0x1::features::contains                                                                                                                                                          0.3883       0.19%
+                        create_ty                                                                                                                                                                    0.024        0.01%
+                        create_ty                                                                                                                                                                    0.008        0.00%
+                        create_ty                                                                                                                                                                    0.008        0.00%
+                        create_ty                                                                                                                                                                    0.008        0.00%
+                        create_ty                                                                                                                                                                    0.008        0.00%
+                        copy_loc                                                                                                                                                                     0.01708      0.01%
+                        ld_u64                                                                                                                                                                       0.0044       0.00%
+                        div                                                                                                                                                                          0.01176      0.01%
+                        st_loc                                                                                                                                                                       0.00882      0.00%
+                        ld_u8                                                                                                                                                                        0.0044       0.00%
+                        move_loc                                                                                                                                                                     0.00882      0.00%
+                        ld_u64                                                                                                                                                                       0.0044       0.00%
+                        mod                                                                                                                                                                          0.01176      0.01%
+                        cast_u8                                                                                                                                                                      0.00882      0.00%
+                        shl                                                                                                                                                                          0.01176      0.01%
+                        st_loc                                                                                                                                                                       0.00882      0.00%
+                        copy_loc                                                                                                                                                                     0.01708      0.01%
+                        copy_loc                                                                                                                                                                     0.01708      0.01%
+                        create_ty                                                                                                                                                                    0.008        0.00%
+                        vec_len                                                                                                                                                                      0.01616      0.01%
+                        lt                                                                                                                                                                           0.01176      0.01%
+                        br_false                                                                                                                                                                     0.00882      0.00%
+                        move_loc                                                                                                                                                                     0.00882      0.00%
+                        move_loc                                                                                                                                                                     0.00882      0.00%
+                        create_ty                                                                                                                                                                    0.008        0.00%
+                        vec_imm_borrow                                                                                                                                                               0.02426      0.01%
+                        read_ref                                                                                                                                                                     0.0259       0.01%
+                        move_loc                                                                                                                                                                     0.00882      0.00%
+                        bit_and                                                                                                                                                                      0.01176      0.01%
+                        ld_u8                                                                                                                                                                        0.0044       0.00%
+                        neq                                                                                                                                                                          0.02974      0.01%
+                        st_loc                                                                                                                                                                       0.00882      0.00%
+                        move_loc                                                                                                                                                                     0.00882      0.00%
+                        ret                                                                                                                                                                          0.0044       0.00%
+                    st_loc                                                                                                                                                                           0.00882      0.00%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    ret                                                                                                                                                                              0.0044       0.00%
+                ret                                                                                                                                                                                  0.0044       0.00%
+            br_false                                                                                                                                                                                 0.00882      0.00%
+            @6                                                                                                                                                                                                    
+            move_loc                                                                                                                                                                                 0.00882      0.00%
+            load&lt;0x1::0x1::account::Account&gt;                                                                                                                                                         18.41762     9.09%
+            exists_generic                                                                                                                                                                           0.01838      0.01%
+            st_loc                                                                                                                                                                                   0.00882      0.00%
+            branch                                                                                                                                                                                   0.00588      0.00%
+            @4                                                                                                                                                                                                    
+            move_loc                                                                                                                                                                                 0.00882      0.00%
+            ret                                                                                                                                                                                      0.0044       0.00%
+        br_false                                                                                                                                                                                     0.00882      0.00%
+        branch                                                                                                                                                                                       0.00588      0.00%
+        @6                                                                                                                                                                                                        
+        call                                                                                                                                                                                         0.07352      0.04%
+        0x1::features::operations_default_to_fa_apt_store_enabled                                                                                                                                    1.01846      0.50%
+            ld_u64                                                                                                                                                                                   0.0044       0.00%
+            call                                                                                                                                                                                     0.09554      0.05%
+            0x1::features::is_enabled                                                                                                                                                                0.91412      0.45%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                ld_const                                                                                                                                                                             0.1297       0.06%
+                exists_generic                                                                                                                                                                       0.01838      0.01%
+                br_false                                                                                                                                                                             0.00882      0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                ld_const                                                                                                                                                                             0.1297       0.06%
+                imm_borrow_global                                                                                                                                                                    0.03676      0.02%
+                imm_borrow_field                                                                                                                                                                     0.0147       0.01%
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                call                                                                                                                                                                                 0.1249       0.06%
+                0x1::features::contains                                                                                                                                                              0.3883       0.19%
+                    create_ty                                                                                                                                                                        0.024        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    ld_u64                                                                                                                                                                           0.0044       0.00%
+                    div                                                                                                                                                                              0.01176      0.01%
+                    st_loc                                                                                                                                                                           0.00882      0.00%
+                    ld_u8                                                                                                                                                                            0.0044       0.00%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    ld_u64                                                                                                                                                                           0.0044       0.00%
+                    mod                                                                                                                                                                              0.01176      0.01%
+                    cast_u8                                                                                                                                                                          0.00882      0.00%
+                    shl                                                                                                                                                                              0.01176      0.01%
+                    st_loc                                                                                                                                                                           0.00882      0.00%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    vec_len                                                                                                                                                                          0.01616      0.01%
+                    lt                                                                                                                                                                               0.01176      0.01%
+                    br_false                                                                                                                                                                         0.00882      0.00%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    vec_imm_borrow                                                                                                                                                                   0.02426      0.01%
+                    read_ref                                                                                                                                                                         0.0259       0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    bit_and                                                                                                                                                                          0.01176      0.01%
+                    ld_u8                                                                                                                                                                            0.0044       0.00%
+                    neq                                                                                                                                                                              0.02974      0.01%
+                    st_loc                                                                                                                                                                           0.00882      0.00%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    ret                                                                                                                                                                              0.0044       0.00%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                ret                                                                                                                                                                                  0.0044       0.00%
+            ret                                                                                                                                                                                      0.0044       0.00%
+        br_false                                                                                                                                                                                     0.00882      0.00%
+        @13                                                                                                                                                                                                       
+        copy_loc                                                                                                                                                                                     0.01708      0.01%
+        create_ty                                                                                                                                                                                    0.008        0.00%
+        call_generic                                                                                                                                                                                 0.1249       0.06%
+        0x1::coin::is_account_registered&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                                 37.50652     18.51%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            create_ty                                                                                                                                                                                0.016        0.01%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            call_generic                                                                                                                                                                             0.08086      0.04%
+            0x1::coin::is_coin_initialized&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                               18.8565      9.30%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                call_generic                                                                                                                                                                         0.0882       0.04%
+                0x1::coin::coin_address&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                                  0.3039       0.15%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    call_generic                                                                                                                                                                     0.08086      0.04%
+                    0x1::type_info::type_of&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                              0.0314       0.02%
+                    st_loc                                                                                                                                                                           0.00882      0.00%
+                    imm_borrow_loc                                                                                                                                                                   0.0044       0.00%
+                    call                                                                                                                                                                             0.0882       0.04%
+                    0x1::type_info::account_address                                                                                                                                                  0.06982      0.03%
+                        create_ty                                                                                                                                                                    0.016        0.01%
+                        move_loc                                                                                                                                                                     0.00882      0.00%
+                        imm_borrow_field                                                                                                                                                             0.0147       0.01%
+                        read_ref                                                                                                                                                                     0.0259       0.01%
+                        ret                                                                                                                                                                          0.0044       0.00%
+                    ret                                                                                                                                                                              0.0044       0.00%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                load&lt;0x1::0x1::coin::CoinInfo&lt;0x1::aptos_coin::AptosCoin&gt;&gt;                                                                                                                           18.41762     9.09%
+                exists                                                                                                                                                                               0.01838      0.01%
+                ret                                                                                                                                                                                  0.0044       0.00%
+            br_false                                                                                                                                                                                 0.00882      0.00%
+            copy_loc                                                                                                                                                                                 0.01708      0.01%
+            create_ty                                                                                                                                                                                0.016        0.01%
+            load&lt;0x1::0x1::coin::CoinStore&lt;0x1::aptos_coin::AptosCoin&gt;&gt;                                                                                                                              18.41762     9.09%
+            exists                                                                                                                                                                                   0.01838      0.01%
+            br_false                                                                                                                                                                                 0.00882      0.00%
+            ld_true                                                                                                                                                                                  0.0044       0.00%
+            st_loc                                                                                                                                                                                   0.00882      0.00%
+            move_loc                                                                                                                                                                                 0.00882      0.00%
+            ret                                                                                                                                                                                      0.0044       0.00%
+        br_false                                                                                                                                                                                     0.00882      0.00%
+        branch                                                                                                                                                                                       0.00588      0.00%
+        @22                                                                                                                                                                                                       
+        move_loc                                                                                                                                                                                     0.00882      0.00%
+        move_loc                                                                                                                                                                                     0.00882      0.00%
+        move_loc                                                                                                                                                                                     0.00882      0.00%
+        create_ty                                                                                                                                                                                    0.008        0.00%
+        call_generic                                                                                                                                                                                 0.13224      0.07%
+        0x1::coin::transfer&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                                              65.2081      32.18%
+            create_ty                                                                                                                                                                                0.016        0.01%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            create_ty                                                                                                                                                                                0.016        0.01%
+            move_loc                                                                                                                                                                                 0.00882      0.00%
+            move_loc                                                                                                                                                                                 0.00882      0.00%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            call_generic                                                                                                                                                                             0.1983       0.10%
+            0x1::coin::withdraw&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                                          62.61996     30.90%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.024        0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.024        0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                call                                                                                                                                                                                 0.0882       0.04%
+                0x1::signer::address_of                                                                                                                                                              0.15068      0.07%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    call                                                                                                                                                                             0.08086      0.04%
+                    0x1::signer::borrow_address                                                                                                                                                      0.0147       0.01%
+                    read_ref                                                                                                                                                                         0.0259       0.01%
+                    ret                                                                                                                                                                              0.0044       0.00%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                load&lt;0x74a0..::0x1::coin::CoinStore&lt;0x1::aptos_coin::AptosCoin&gt;&gt;                                                                                                                     18.41762     9.09%
+                exists                                                                                                                                                                               0.01838      0.01%
+                br_false                                                                                                                                                                             0.00882      0.00%
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                imm_borrow_global_generic                                                                                                                                                            0.03676      0.02%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                imm_borrow_field_generic                                                                                                                                                             0.0147       0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                imm_borrow_field_generic                                                                                                                                                             0.0147       0.01%
+                read_ref                                                                                                                                                                             0.0259       0.01%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                ge                                                                                                                                                                                   0.01176      0.01%
+                br_false                                                                                                                                                                             0.00882      0.00%
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                ld_u64                                                                                                                                                                               0.0044       0.00%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                ld_u64                                                                                                                                                                               0.0044       0.00%
+                gt                                                                                                                                                                                   0.01176      0.01%
+                br_false                                                                                                                                                                             0.00882      0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                call_generic                                                                                                                                                                         0.19096      0.09%
+                0x1::coin::ensure_paired_metadata&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                        39.78072     19.63%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    call                                                                                                                                                                             0.07352      0.04%
+                    0x1::features::coin_to_fungible_asset_migration_feature_enabled                                                                                                                  1.01846      0.50%
+                        ld_u64                                                                                                                                                                       0.0044       0.00%
+                        call                                                                                                                                                                         0.09554      0.05%
+                        0x1::features::is_enabled                                                                                                                                                    0.91412      0.45%
+                            create_ty                                                                                                                                                                0.008        0.00%
+                            create_ty                                                                                                                                                                0.008        0.00%
+                            create_ty                                                                                                                                                                0.008        0.00%
+                            ld_const                                                                                                                                                                 0.1297       0.06%
+                            exists_generic                                                                                                                                                           0.01838      0.01%
+                            br_false                                                                                                                                                                 0.00882      0.00%
+                            create_ty                                                                                                                                                                0.008        0.00%
+                            ld_const                                                                                                                                                                 0.1297       0.06%
+                            imm_borrow_global                                                                                                                                                        0.03676      0.02%
+                            imm_borrow_field                                                                                                                                                         0.0147       0.01%
+                            move_loc                                                                                                                                                                 0.00882      0.00%
+                            call                                                                                                                                                                     0.1249       0.06%
+                            0x1::features::contains                                                                                                                                                  0.3883       0.19%
+                                create_ty                                                                                                                                                            0.024        0.01%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                copy_loc                                                                                                                                                             0.01708      0.01%
+                                ld_u64                                                                                                                                                               0.0044       0.00%
+                                div                                                                                                                                                                  0.01176      0.01%
+                                st_loc                                                                                                                                                               0.00882      0.00%
+                                ld_u8                                                                                                                                                                0.0044       0.00%
+                                move_loc                                                                                                                                                             0.00882      0.00%
+                                ld_u64                                                                                                                                                               0.0044       0.00%
+                                mod                                                                                                                                                                  0.01176      0.01%
+                                cast_u8                                                                                                                                                              0.00882      0.00%
+                                shl                                                                                                                                                                  0.01176      0.01%
+                                st_loc                                                                                                                                                               0.00882      0.00%
+                                copy_loc                                                                                                                                                             0.01708      0.01%
+                                copy_loc                                                                                                                                                             0.01708      0.01%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                vec_len                                                                                                                                                              0.01616      0.01%
+                                lt                                                                                                                                                                   0.01176      0.01%
+                                br_false                                                                                                                                                             0.00882      0.00%
+                                move_loc                                                                                                                                                             0.00882      0.00%
+                                move_loc                                                                                                                                                             0.00882      0.00%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                vec_imm_borrow                                                                                                                                                       0.02426      0.01%
+                                read_ref                                                                                                                                                             0.0259       0.01%
+                                move_loc                                                                                                                                                             0.00882      0.00%
+                                bit_and                                                                                                                                                              0.01176      0.01%
+                                ld_u8                                                                                                                                                                0.0044       0.00%
+                                neq                                                                                                                                                                  0.02974      0.01%
+                                st_loc                                                                                                                                                               0.00882      0.00%
+                                move_loc                                                                                                                                                             0.00882      0.00%
+                                ret                                                                                                                                                                  0.0044       0.00%
+                            st_loc                                                                                                                                                                   0.00882      0.00%
+                            move_loc                                                                                                                                                                 0.00882      0.00%
+                            ret                                                                                                                                                                      0.0044       0.00%
+                        ret                                                                                                                                                                          0.0044       0.00%
+                    br_false                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    ld_const                                                                                                                                                                         0.1297       0.06%
+                    load&lt;0x1::0x1::coin::CoinConversionMap&gt;                                                                                                                                          18.41762     9.09%
+                    exists_generic                                                                                                                                                                   0.01838      0.01%
+                    br_false                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    ld_const                                                                                                                                                                         0.1297       0.06%
+                    mut_borrow_global                                                                                                                                                                0.03676      0.02%
+                    st_loc                                                                                                                                                                           0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    call_generic                                                                                                                                                                     0.08086      0.04%
+                    0x1::type_info::type_of&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                              0.0314       0.02%
+                    st_loc                                                                                                                                                                           0.00882      0.00%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    imm_borrow_field                                                                                                                                                                 0.0147       0.01%
+                    copy_loc                                                                                                                                                                         0.056        0.03%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    call_generic                                                                                                                                                                     0.11756      0.06%
+                    0x1::table::contains&lt;0x1::type_info::TypeInfo,0x1::object::Object&lt;0x1::fungible_asset::Metadata&gt;&gt;                                                                                18.77226     9.26%
+                        create_ty                                                                                                                                                                    0.04         0.02%
+                        create_ty                                                                                                                                                                    0.008        0.00%
+                        move_loc                                                                                                                                                                     0.00882      0.00%
+                        move_loc                                                                                                                                                                     0.00882      0.00%
+                        create_ty                                                                                                                                                                    0.008        0.00%
+                        create_ty                                                                                                                                                                    0.016        0.01%
+                        create_ty                                                                                                                                                                    0.024        0.01%
+                        call_generic                                                                                                                                                                 0.11022      0.05%
+                        0x1::table::contains_box&lt;0x1::type_info::TypeInfo,0x1::object::Object&lt;0x1::fungible_asset::Metadata&gt;,0x1::table::Box&lt;0x1::object::Object&lt;0x1::fungible_asset::Metadata&gt;&gt;&gt;    18.544       9.15%
+                        ret                                                                                                                                                                          0.0044       0.00%
+                    br_false                                                                                                                                                                         0.00882      0.00%
+                    branch                                                                                                                                                                           0.00588      0.00%
+                    @85                                                                                                                                                                                           
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    imm_borrow_field                                                                                                                                                                 0.0147       0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    call_generic                                                                                                                                                                     0.11756      0.06%
+                    0x1::table::borrow&lt;0x1::type_info::TypeInfo,0x1::object::Object&lt;0x1::fungible_asset::Metadata&gt;&gt;                                                                                  0.40934      0.20%
+                        create_ty                                                                                                                                                                    0.04         0.02%
+                        create_ty                                                                                                                                                                    0.008        0.00%
+                        move_loc                                                                                                                                                                     0.00882      0.00%
+                        move_loc                                                                                                                                                                     0.00882      0.00%
+                        create_ty                                                                                                                                                                    0.008        0.00%
+                        create_ty                                                                                                                                                                    0.016        0.01%
+                        create_ty                                                                                                                                                                    0.024        0.01%
+                        call_generic                                                                                                                                                                 0.11022      0.05%
+                        0x1::table::borrow_box&lt;0x1::type_info::TypeInfo,0x1::object::Object&lt;0x1::fungible_asset::Metadata&gt;,0x1::table::Box&lt;0x1::object::Object&lt;0x1::fungible_asset::Metadata&gt;&gt;&gt;      0.12638      0.06%
+                        create_ty                                                                                                                                                                    0.024        0.01%
+                        create_ty                                                                                                                                                                    0.016        0.01%
+                        imm_borrow_field_generic                                                                                                                                                     0.0147       0.01%
+                        ret                                                                                                                                                                          0.0044       0.00%
+                    read_ref                                                                                                                                                                         0.0371       0.02%
+                    ret                                                                                                                                                                              0.0044       0.00%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                call                                                                                                                                                                                 0.0882       0.04%
+                0x1::permissioned_signer::is_permissioned_signer                                                                                                                                     1.13736      0.56%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    call                                                                                                                                                                             0.07352      0.04%
+                    0x1::features::is_permissioned_signer_enabled                                                                                                                                    1.01846      0.50%
+                        ld_u64                                                                                                                                                                       0.0044       0.00%
+                        call                                                                                                                                                                         0.09554      0.05%
+                        0x1::features::is_enabled                                                                                                                                                    0.91412      0.45%
+                            create_ty                                                                                                                                                                0.008        0.00%
+                            create_ty                                                                                                                                                                0.008        0.00%
+                            create_ty                                                                                                                                                                0.008        0.00%
+                            ld_const                                                                                                                                                                 0.1297       0.06%
+                            exists_generic                                                                                                                                                           0.01838      0.01%
+                            br_false                                                                                                                                                                 0.00882      0.00%
+                            create_ty                                                                                                                                                                0.008        0.00%
+                            ld_const                                                                                                                                                                 0.1297       0.06%
+                            imm_borrow_global                                                                                                                                                        0.03676      0.02%
+                            imm_borrow_field                                                                                                                                                         0.0147       0.01%
+                            move_loc                                                                                                                                                                 0.00882      0.00%
+                            call                                                                                                                                                                     0.1249       0.06%
+                            0x1::features::contains                                                                                                                                                  0.3883       0.19%
+                                create_ty                                                                                                                                                            0.024        0.01%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                copy_loc                                                                                                                                                             0.01708      0.01%
+                                ld_u64                                                                                                                                                               0.0044       0.00%
+                                div                                                                                                                                                                  0.01176      0.01%
+                                st_loc                                                                                                                                                               0.00882      0.00%
+                                ld_u8                                                                                                                                                                0.0044       0.00%
+                                move_loc                                                                                                                                                             0.00882      0.00%
+                                ld_u64                                                                                                                                                               0.0044       0.00%
+                                mod                                                                                                                                                                  0.01176      0.01%
+                                cast_u8                                                                                                                                                              0.00882      0.00%
+                                shl                                                                                                                                                                  0.01176      0.01%
+                                st_loc                                                                                                                                                               0.00882      0.00%
+                                copy_loc                                                                                                                                                             0.01708      0.01%
+                                copy_loc                                                                                                                                                             0.01708      0.01%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                vec_len                                                                                                                                                              0.01616      0.01%
+                                lt                                                                                                                                                                   0.01176      0.01%
+                                br_false                                                                                                                                                             0.00882      0.00%
+                                move_loc                                                                                                                                                             0.00882      0.00%
+                                move_loc                                                                                                                                                             0.00882      0.00%
+                                create_ty                                                                                                                                                            0.008        0.00%
+                                vec_imm_borrow                                                                                                                                                       0.02426      0.01%
+                                read_ref                                                                                                                                                             0.0259       0.01%
+                                move_loc                                                                                                                                                             0.00882      0.00%
+                                bit_and                                                                                                                                                              0.01176      0.01%
+                                ld_u8                                                                                                                                                                0.0044       0.00%
+                                neq                                                                                                                                                                  0.02974      0.01%
+                                st_loc                                                                                                                                                               0.00882      0.00%
+                                move_loc                                                                                                                                                             0.00882      0.00%
+                                ret                                                                                                                                                                  0.0044       0.00%
+                            st_loc                                                                                                                                                                   0.00882      0.00%
+                            move_loc                                                                                                                                                                 0.00882      0.00%
+                            ret                                                                                                                                                                      0.0044       0.00%
+                        ret                                                                                                                                                                          0.0044       0.00%
+                    br_true                                                                                                                                                                          0.00882      0.00%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    pop                                                                                                                                                                              0.00294      0.00%
+                    ld_false                                                                                                                                                                         0.0044       0.00%
+                    ret                                                                                                                                                                              0.0044       0.00%
+                br_true                                                                                                                                                                              0.00882      0.00%
+                branch                                                                                                                                                                               0.00588      0.00%
+                @40                                                                                                                                                                                               
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                mut_borrow_global_generic                                                                                                                                                            0.03676      0.02%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                imm_borrow_field_generic                                                                                                                                                             0.0147       0.01%
+                read_ref                                                                                                                                                                             0.0259       0.01%
+                br_true                                                                                                                                                                              0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                mut_borrow_field_generic                                                                                                                                                             0.0147       0.01%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                pack                                                                                                                                                                                 0.0191       0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                call_generic                                                                                                                                                                         0.11022      0.05%
+                0x1::event::emit_event&lt;0x1::coin::WithdrawEvent&gt;                                                                                                                                     1.07706      0.53%
+                    create_ty                                                                                                                                                                        0.024        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    imm_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    call_generic                                                                                                                                                                     0.0882       0.04%
+                    0x1::bcs::to_bytes&lt;0x1::guid::GUID&gt;                                                                                                                                              0.0288       0.01%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    imm_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    read_ref                                                                                                                                                                         0.0259       0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    call_generic                                                                                                                                                                     0.10288      0.05%
+                    0x1::event::write_to_event_store&lt;0x1::coin::WithdrawEvent&gt;                                                                                                                       0.49772      0.25%
+                    nop                                                                                                                                                                              0.00072      0.00%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    imm_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    read_ref                                                                                                                                                                         0.0259       0.01%
+                    ld_u64                                                                                                                                                                           0.0044       0.00%
+                    add                                                                                                                                                                              0.01176      0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    mut_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    write_ref                                                                                                                                                                        0.0147       0.01%
+                    ret                                                                                                                                                                              0.0044       0.00%
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                mut_borrow_field_generic                                                                                                                                                             0.0147       0.01%
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                call_generic                                                                                                                                                                         0.11022      0.05%
+                0x1::coin::extract&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                                       0.38184      0.19%
+                    create_ty                                                                                                                                                                        0.024        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    imm_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    read_ref                                                                                                                                                                         0.0259       0.01%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    ge                                                                                                                                                                               0.01176      0.01%
+                    br_false                                                                                                                                                                         0.00882      0.00%
+                    nop                                                                                                                                                                              0.00072      0.00%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    imm_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    read_ref                                                                                                                                                                         0.0259       0.01%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    sub                                                                                                                                                                              0.01176      0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    mut_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    write_ref                                                                                                                                                                        0.0147       0.01%
+                    nop                                                                                                                                                                              0.00072      0.00%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    pack                                                                                                                                                                             0.0191       0.01%
+                    ret                                                                                                                                                                              0.0044       0.00%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                ld_u64                                                                                                                                                                               0.0044       0.00%
+                gt                                                                                                                                                                                   0.01176      0.01%
+                br_false                                                                                                                                                                             0.00882      0.00%
+                @73                                                                                                                                                                                               
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                pop                                                                                                                                                                                  0.00294      0.00%
+                branch                                                                                                                                                                               0.00588      0.00%
+                @71                                                                                                                                                                                               
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                ret                                                                                                                                                                                  0.0044       0.00%
+            st_loc                                                                                                                                                                                   0.00882      0.00%
+            move_loc                                                                                                                                                                                 0.00882      0.00%
+            move_loc                                                                                                                                                                                 0.00882      0.00%
+            create_ty                                                                                                                                                                                0.008        0.00%
+            call_generic                                                                                                                                                                             0.14692      0.07%
+            0x1::coin::deposit&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                                           2.13042      1.05%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.024        0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                exists                                                                                                                                                                               0.01838      0.01%
+                br_false                                                                                                                                                                             0.00882      0.00%
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                mut_borrow_global_generic                                                                                                                                                            0.03676      0.02%
+                st_loc                                                                                                                                                                               0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                imm_borrow_field_generic                                                                                                                                                             0.0147       0.01%
+                read_ref                                                                                                                                                                             0.0259       0.01%
+                br_true                                                                                                                                                                              0.00882      0.00%
+                copy_loc                                                                                                                                                                             0.01708      0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                mut_borrow_field_generic                                                                                                                                                             0.0147       0.01%
+                imm_borrow_loc                                                                                                                                                                       0.0044       0.00%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                imm_borrow_field_generic                                                                                                                                                             0.0147       0.01%
+                read_ref                                                                                                                                                                             0.0259       0.01%
+                pack                                                                                                                                                                                 0.0191       0.01%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                call_generic                                                                                                                                                                         0.11022      0.05%
+                0x1::event::emit_event&lt;0x1::coin::DepositEvent&gt;                                                                                                                                      1.07706      0.53%
+                    create_ty                                                                                                                                                                        0.024        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    imm_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    call_generic                                                                                                                                                                     0.0882       0.04%
+                    0x1::bcs::to_bytes&lt;0x1::guid::GUID&gt;                                                                                                                                              0.0288       0.01%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    imm_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    read_ref                                                                                                                                                                         0.0259       0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    call_generic                                                                                                                                                                     0.10288      0.05%
+                    0x1::event::write_to_event_store&lt;0x1::coin::DepositEvent&gt;                                                                                                                        0.49772      0.25%
+                    nop                                                                                                                                                                              0.00072      0.00%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    imm_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    read_ref                                                                                                                                                                         0.0259       0.01%
+                    ld_u64                                                                                                                                                                           0.0044       0.00%
+                    add                                                                                                                                                                              0.01176      0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    mut_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    write_ref                                                                                                                                                                        0.0147       0.01%
+                    ret                                                                                                                                                                              0.0044       0.00%
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                create_ty                                                                                                                                                                            0.016        0.01%
+                mut_borrow_field_generic                                                                                                                                                             0.0147       0.01%
+                move_loc                                                                                                                                                                             0.00882      0.00%
+                create_ty                                                                                                                                                                            0.008        0.00%
+                call_generic                                                                                                                                                                         0.11756      0.06%
+                0x1::coin::merge&lt;0x1::aptos_coin::AptosCoin&gt;                                                                                                                                         0.27978      0.14%
+                    create_ty                                                                                                                                                                        0.024        0.01%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    nop                                                                                                                                                                              0.00072      0.00%
+                    nop                                                                                                                                                                              0.00072      0.00%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    unpack                                                                                                                                                                           0.0191       0.01%
+                    st_loc                                                                                                                                                                           0.00882      0.00%
+                    nop                                                                                                                                                                              0.00072      0.00%
+                    copy_loc                                                                                                                                                                         0.01708      0.01%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    imm_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    read_ref                                                                                                                                                                         0.0259       0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    add                                                                                                                                                                              0.01176      0.01%
+                    move_loc                                                                                                                                                                         0.00882      0.00%
+                    create_ty                                                                                                                                                                        0.016        0.01%
+                    create_ty                                                                                                                                                                        0.008        0.00%
+                    mut_borrow_field_generic                                                                                                                                                         0.0147       0.01%
+                    write_ref                                                                                                                                                                        0.0147       0.01%
+                    ret                                                                                                                                                                              0.0044       0.00%
+                ret                                                                                                                                                                                  0.0044       0.00%
+            ret                                                                                                                                                                                      0.0044       0.00%
+        branch                                                                                                                                                                                       0.00588      0.00%
+        @12                                                                                                                                                                                                       
+        ret                                                                                                                                                                                          0.0044       0.00%
+    ledger writes                                                                                                                                                                                    5.12064      2.53%
+        transaction                                                                                                                                                                                  0.2937       0.14%
+        events                                                                                                                                                                                       0.38626      0.19%
+            0x1::coin::WithdrawEvent                                                                                                                                                                 0.19402      0.10%
+            0x1::coin::DepositEvent                                                                                                                                                                  0.19224      0.09%
+        state write ops                                                                                                                                                                              4.44068      2.19%
+            modify&lt;0x1::0x1::coin::CoinStore&lt;0x1::aptos_coin::AptosCoin&gt;&gt;                                                                                                                            2.22034      1.10%
+            modify&lt;0x74a0..::0x1::coin::CoinStore&lt;0x1::aptos_coin::AptosCoin&gt;&gt;                                                                                                                       2.22034      1.10%
+</code></pre>
+        </div>
+    </section>
+
+    <footer>
+        <p>Generated by the Aptos Gas Profiler</p>
+    </footer>
+</body>
+
+</html>

@@ -14,11 +14,11 @@ export function AlertStatusBadge({ enabled, size = 'md' }: AlertStatusBadgeProps
                  ${
                    enabled
                      ? 'bg-green-500/10 text-green-400 border border-green-500/20'
-                     : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                     : 'bg-dark-500/10 text-dark-400 border border-dark-500/20'
                  }`}
     >
       <span
-        className={`w-1.5 h-1.5 rounded-full ${enabled ? 'bg-green-400' : 'bg-slate-400'}`}
+        className={`w-1.5 h-1.5 rounded-full ${enabled ? 'bg-green-400' : 'bg-dark-400'}`}
       />
       {enabled ? 'Active' : 'Paused'}
     </span>

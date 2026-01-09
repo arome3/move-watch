@@ -1,9 +1,11 @@
-import { Router, Response, NextFunction } from 'express';
+import { Router, type Router as RouterType, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import * as monitoringService from '../services/monitoring.js';
+import * as metricsService from '../services/metricsService.js';
 import { requireAuth, type AuthenticatedRequest } from '../middleware/auth.js';
+// Note: Monitoring uses subscription-based access, not x402 micropayments
 
-const router = Router();
+const router: RouterType = Router();
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -16,6 +18,7 @@ const statsQuerySchema = z.object({
   period: periodSchema.optional().default('24h'),
   network: networkSchema.optional().default('testnet'),
   moduleAddress: z.string().optional(),
+  sender: z.string().optional(), // Filter by wallet address
 });
 
 const transactionsQuerySchema = z.object({
@@ -25,6 +28,7 @@ const transactionsQuerySchema = z.object({
   search: z.string().optional(),
   limit: z.coerce.number().min(1).max(100).optional().default(50),
   offset: z.coerce.number().min(0).optional().default(0),
+  sender: z.string().optional(), // Filter by wallet address
 });
 
 const eventsQuerySchema = z.object({
@@ -33,10 +37,18 @@ const eventsQuerySchema = z.object({
   eventType: z.string().optional(),
   limit: z.coerce.number().min(1).max(500).optional().default(100),
   offset: z.coerce.number().min(0).optional().default(0),
+  sender: z.string().optional(), // Filter by wallet address
 });
 
 const gasQuerySchema = z.object({
   period: periodSchema.optional().default('24h'),
+  network: networkSchema.optional().default('testnet'),
+  moduleAddress: z.string().optional(),
+  sender: z.string().optional(), // Filter by wallet address
+});
+
+const failureRateQuerySchema = z.object({
+  period: z.enum(['1h', '24h', '7d', '30d']).optional().default('24h'),
   network: networkSchema.optional().default('testnet'),
   moduleAddress: z.string().optional(),
 });
@@ -60,6 +72,8 @@ const createContractSchema = z.object({
 /**
  * GET /monitoring/stats
  * Get dashboard statistics
+ *
+ * Access: Subscription-based (included in all plans)
  */
 router.get(
   '/stats',
@@ -78,16 +92,83 @@ router.get(
         });
       }
 
-      const { period, network, moduleAddress } = parseResult.data;
+      const { period, network, moduleAddress, sender } = parseResult.data;
 
       const stats = await monitoringService.getDashboardStats(
         req.user!.id,
         period,
         network,
-        moduleAddress
+        moduleAddress,
+        sender
       );
 
       res.json(stats);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /monitoring/failure-rate
+ * Get failure rate metrics over time
+ *
+ * Returns:
+ * - dataPoints: Array of failure rate data points for charting
+ * - summary: Overall failure rate statistics
+ */
+router.get(
+  '/failure-rate',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const parseResult = failureRateQuerySchema.safeParse(req.query);
+
+      if (!parseResult.success) {
+        return res.status(400).json({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid query parameters',
+            details: parseResult.error.flatten().fieldErrors,
+          },
+        });
+      }
+
+      const { period, network, moduleAddress } = parseResult.data;
+
+      const metrics = await metricsService.getFailureRateMetrics(
+        moduleAddress || null,
+        network,
+        period
+      );
+
+      res.json(metrics);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /monitoring/failure-rate/realtime
+ * Get real-time failure rate for the last N minutes
+ */
+router.get(
+  '/failure-rate/realtime',
+  requireAuth,
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const network = (req.query.network as string) || 'testnet';
+      const moduleAddress = req.query.moduleAddress as string | undefined;
+      const minutes = parseInt(req.query.minutes as string) || 5;
+
+      const metrics = await metricsService.getRealtimeFailureRate(
+        moduleAddress || null,
+        network,
+        Math.min(minutes, 60) // Cap at 60 minutes
+      );
+
+      res.json(metrics);
     } catch (error) {
       next(error);
     }
@@ -220,13 +301,14 @@ router.get(
         });
       }
 
-      const { period, network, moduleAddress } = parseResult.data;
+      const { period, network, moduleAddress, sender } = parseResult.data;
 
       const analytics = await monitoringService.getGasAnalytics(
         req.user!.id,
         period,
         network,
-        moduleAddress
+        moduleAddress,
+        sender
       );
 
       res.json(analytics);

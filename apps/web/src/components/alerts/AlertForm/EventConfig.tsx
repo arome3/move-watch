@@ -27,12 +27,12 @@ export function EventConfig({ value, onChange, errors = {} }: EventConfigProps) 
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-dark-400">
         Get notified when a specific event is emitted on-chain.
       </p>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="block text-sm font-medium text-dark-300 mb-2">
           Event Type <span className="text-red-400">*</span>
         </label>
         <input
@@ -40,23 +40,23 @@ export function EventConfig({ value, onChange, errors = {} }: EventConfigProps) 
           value={value.eventType}
           onChange={(e) => onChange({ ...value, eventType: e.target.value })}
           placeholder="0x1::coin::WithdrawEvent"
-          className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm font-mono
-                     text-slate-100 placeholder:text-slate-600
+          className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm font-mono
+                     text-dark-100 placeholder:text-dark-600
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      transition-colors
-                     ${errors.eventType ? 'border-red-500' : 'border-slate-700'}`}
+                     ${errors.eventType ? 'border-red-500' : 'border-dark-700'}`}
         />
         {errors.eventType && (
           <p className="mt-1 text-xs text-red-400">{errors.eventType}</p>
         )}
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-dark-500">
           Full type path of the event to monitor
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
-          Filters <span className="text-slate-500">(optional)</span>
+        <label className="block text-sm font-medium text-dark-300 mb-2">
+          Filters <span className="text-dark-500">(optional)</span>
         </label>
         <textarea
           value={getFiltersString()}
@@ -65,16 +65,16 @@ export function EventConfig({ value, onChange, errors = {} }: EventConfigProps) 
   "amount": { "gte": 1000000000 }
 }`}
           rows={4}
-          className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm font-mono
-                     text-slate-100 placeholder:text-slate-600
+          className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm font-mono
+                     text-dark-100 placeholder:text-dark-600
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      transition-colors resize-none
-                     ${errors.filters ? 'border-red-500' : 'border-slate-700'}`}
+                     ${errors.filters ? 'border-red-500' : 'border-dark-700'}`}
         />
         {errors.filters && (
           <p className="mt-1 text-xs text-red-400">{errors.filters}</p>
         )}
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-dark-500">
           JSON object to filter events. Supports operators: gte, lte, gt, lt, eq
         </p>
       </div>

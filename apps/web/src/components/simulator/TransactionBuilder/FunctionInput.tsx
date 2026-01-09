@@ -17,7 +17,7 @@ export function FunctionInput() {
     <div className="space-y-4">
       {/* Module Address */}
       <div className="space-y-2">
-        <label htmlFor="moduleAddress" className="block text-sm font-medium text-slate-300">
+        <label htmlFor="moduleAddress" className="block text-sm font-medium text-dark-300">
           Module Address
         </label>
         <input
@@ -26,10 +26,10 @@ export function FunctionInput() {
           value={moduleAddress}
           onChange={(e) => setModuleAddress(e.target.value)}
           placeholder="0x1"
-          className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm font-mono text-slate-100
-                     placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500
+          className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm font-mono text-dark-100
+                     placeholder:text-dark-600 focus:outline-none focus:ring-2 focus:ring-primary-500
                      focus:border-transparent transition-colors
-                     ${errors.moduleAddress ? 'border-red-500' : 'border-slate-700'}`}
+                     ${errors.moduleAddress ? 'border-red-500' : 'border-dark-700'}`}
         />
         {errors.moduleAddress && (
           <p className="text-xs text-red-400">{errors.moduleAddress}</p>
@@ -39,7 +39,7 @@ export function FunctionInput() {
       {/* Module Name & Function Name (side by side) */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label htmlFor="moduleName" className="block text-sm font-medium text-slate-300">
+          <label htmlFor="moduleName" className="block text-sm font-medium text-dark-300">
             Module Name
           </label>
           <input
@@ -48,10 +48,10 @@ export function FunctionInput() {
             value={moduleName}
             onChange={(e) => setModuleName(e.target.value)}
             placeholder="coin"
-            className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm font-mono text-slate-100
-                       placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500
+            className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm font-mono text-dark-100
+                       placeholder:text-dark-600 focus:outline-none focus:ring-2 focus:ring-primary-500
                        focus:border-transparent transition-colors
-                       ${errors.moduleName ? 'border-red-500' : 'border-slate-700'}`}
+                       ${errors.moduleName ? 'border-red-500' : 'border-dark-700'}`}
           />
           {errors.moduleName && (
             <p className="text-xs text-red-400">{errors.moduleName}</p>
@@ -59,7 +59,7 @@ export function FunctionInput() {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="functionName" className="block text-sm font-medium text-slate-300">
+          <label htmlFor="functionName" className="block text-sm font-medium text-dark-300">
             Function Name
           </label>
           <input
@@ -68,10 +68,10 @@ export function FunctionInput() {
             value={functionName}
             onChange={(e) => setFunctionName(e.target.value)}
             placeholder="transfer"
-            className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm font-mono text-slate-100
-                       placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary-500
+            className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm font-mono text-dark-100
+                       placeholder:text-dark-600 focus:outline-none focus:ring-2 focus:ring-primary-500
                        focus:border-transparent transition-colors
-                       ${errors.functionName ? 'border-red-500' : 'border-slate-700'}`}
+                       ${errors.functionName ? 'border-red-500' : 'border-dark-700'}`}
           />
           {errors.functionName && (
             <p className="text-xs text-red-400">{errors.functionName}</p>
@@ -80,8 +80,8 @@ export function FunctionInput() {
       </div>
 
       {/* Function path preview */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-lg px-3 py-2">
-        <span className="text-xs text-slate-500">Function path: </span>
+      <div className="bg-dark-900/50 border border-dark-800 rounded-lg px-3 py-2">
+        <span className="text-xs text-dark-500">Function path: </span>
         <code className="text-xs text-primary-400 font-mono">
           {moduleAddress}::{moduleName}::{functionName}
         </code>

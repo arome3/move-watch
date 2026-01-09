@@ -9,7 +9,7 @@ function ErrorContent() {
   const error = searchParams.get('error');
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-dark-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md text-center">
         {/* Error Icon */}
         <div className="w-20 h-20 mx-auto bg-red-500/20 rounded-full flex items-center justify-center mb-6">
@@ -32,12 +32,12 @@ function ErrorContent() {
         <h1 className="text-2xl font-bold text-white mb-2">
           Authentication Error
         </h1>
-        <p className="text-slate-400 mb-6">{getErrorMessage(error)}</p>
+        <p className="text-dark-400 mb-6">{getErrorMessage(error)}</p>
 
         {/* Error Details */}
         {error && (
-          <div className="mb-6 p-3 bg-slate-800 border border-slate-700 rounded-lg">
-            <p className="text-xs font-mono text-slate-500">
+          <div className="mb-6 p-3 bg-dark-800 border border-dark-700 rounded-lg">
+            <p className="text-xs font-mono text-dark-500">
               Error code: {error}
             </p>
           </div>
@@ -53,14 +53,14 @@ function ErrorContent() {
           </Link>
           <Link
             href="/"
-            className="block w-full px-4 py-3 bg-slate-800 text-slate-300 font-medium rounded-lg hover:bg-slate-700 transition-colors"
+            className="block w-full px-4 py-3 bg-dark-800 text-dark-300 font-medium rounded-lg hover:bg-dark-700 transition-colors"
           >
             Go Home
           </Link>
         </div>
 
         {/* Help */}
-        <p className="mt-8 text-sm text-slate-500">
+        <p className="mt-8 text-sm text-dark-500">
           Need help?{' '}
           <a
             href="mailto:support@movewatch.io"
@@ -92,8 +92,8 @@ export default function AuthErrorPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-          <div className="animate-pulse text-slate-400">Loading...</div>
+        <div className="min-h-screen bg-dark-900 flex items-center justify-center">
+          <div className="animate-pulse text-dark-400">Loading...</div>
         </div>
       }
     >

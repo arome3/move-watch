@@ -1,16 +1,15 @@
 'use client';
 
-import type { Network, AlertCondition, ChannelConfig as ChannelConfigType } from '@movewatch/shared';
+import type { Network, AlertCondition } from '@movewatch/shared';
 import { ConditionBuilder } from './ConditionBuilder';
-import { ChannelConfig } from './ChannelConfig';
-import { ChannelList } from './ChannelList';
+import { ChannelSelector } from './ChannelSelector';
 
 interface AlertFormProps {
   // Form state
   name: string;
   network: Network;
   condition: AlertCondition | null;
-  channels: ChannelConfigType[];
+  channelIds: string[];
   cooldown: number;
   errors: Record<string, string>;
 
@@ -18,8 +17,7 @@ interface AlertFormProps {
   onNameChange: (name: string) => void;
   onNetworkChange: (network: Network) => void;
   onConditionChange: (condition: AlertCondition | null) => void;
-  onAddChannel: (channel: ChannelConfigType) => void;
-  onRemoveChannel: (index: number) => void;
+  onChannelIdsChange: (ids: string[]) => void;
   onCooldownChange: (seconds: number) => void;
   onSubmit: () => void;
   onCancel: () => void;
@@ -50,14 +48,13 @@ export function AlertForm({
   name,
   network,
   condition,
-  channels,
+  channelIds,
   cooldown,
   errors,
   onNameChange,
   onNetworkChange,
   onConditionChange,
-  onAddChannel,
-  onRemoveChannel,
+  onChannelIdsChange,
   onCooldownChange,
   onSubmit,
   onCancel,
@@ -72,12 +69,12 @@ export function AlertForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Info */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-        <h3 className="text-sm font-medium text-slate-300 mb-4">Basic Information</h3>
+      <div className="bg-dark-800 rounded-lg p-4 border border-dark-700">
+        <h3 className="text-sm font-medium text-dark-300 mb-4">Basic Information</h3>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-dark-300 mb-2">
               Alert Name <span className="text-red-400">*</span>
             </label>
             <input
@@ -85,11 +82,11 @@ export function AlertForm({
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
               placeholder="e.g., Failed Transfers"
-              className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm
-                         text-slate-100 placeholder:text-slate-600
+              className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm
+                         text-dark-100 placeholder:text-dark-600
                          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                          transition-colors
-                         ${errors.name ? 'border-red-500' : 'border-slate-700'}`}
+                         ${errors.name ? 'border-red-500' : 'border-dark-700'}`}
             />
             {errors.name && (
               <p className="mt-1 text-xs text-red-400">{errors.name}</p>
@@ -98,14 +95,14 @@ export function AlertForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-dark-300 mb-2">
                 Network
               </label>
               <select
                 value={network}
                 onChange={(e) => onNetworkChange(e.target.value as Network)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm
-                           text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500
+                className="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-sm
+                           text-dark-100 focus:outline-none focus:ring-2 focus:ring-primary-500
                            focus:border-transparent transition-colors"
               >
                 {NETWORKS.map((n) => (
@@ -117,14 +114,14 @@ export function AlertForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-dark-300 mb-2">
                 Cooldown
               </label>
               <select
                 value={cooldown}
                 onChange={(e) => onCooldownChange(parseInt(e.target.value))}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm
-                           text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500
+                className="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-sm
+                           text-dark-100 focus:outline-none focus:ring-2 focus:ring-primary-500
                            focus:border-transparent transition-colors"
               >
                 {COOLDOWN_OPTIONS.map((opt) => (
@@ -133,7 +130,7 @@ export function AlertForm({
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-dark-500">
                 Minimum time between notifications
               </p>
             </div>
@@ -142,8 +139,8 @@ export function AlertForm({
       </div>
 
       {/* Condition */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-        <h3 className="text-sm font-medium text-slate-300 mb-4">Condition</h3>
+      <div className="bg-dark-800 rounded-lg p-4 border border-dark-700">
+        <h3 className="text-sm font-medium text-dark-300 mb-4">Condition</h3>
         <ConditionBuilder
           value={condition}
           onChange={onConditionChange}
@@ -152,28 +149,19 @@ export function AlertForm({
       </div>
 
       {/* Notification Channels */}
-      <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-        <h3 className="text-sm font-medium text-slate-300 mb-4">
+      <div className="bg-dark-800 rounded-lg p-4 border border-dark-700">
+        <h3 className="text-sm font-medium text-dark-300 mb-4">
           Notification Channels <span className="text-red-400">*</span>
         </h3>
+        <p className="text-xs text-dark-400 mb-4">
+          Select channels to receive notifications when this alert triggers.
+        </p>
 
-        <div className="space-y-4">
-          <ChannelList channels={channels} onRemove={onRemoveChannel} />
-
-          {errors.channels && (
-            <p className="text-xs text-red-400">{errors.channels}</p>
-          )}
-
-          {channels.length < 5 && (
-            <div className="pt-4 border-t border-slate-700">
-              <p className="text-sm text-slate-400 mb-3">Add a channel:</p>
-              <ChannelConfig
-                onAdd={onAddChannel}
-                existingTypes={channels.map((c) => c.type)}
-              />
-            </div>
-          )}
-        </div>
+        <ChannelSelector
+          selectedIds={channelIds}
+          onChange={onChannelIdsChange}
+          error={errors.channelIds}
+        />
       </div>
 
       {/* Actions */}
@@ -181,7 +169,7 @@ export function AlertForm({
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-300
+          className="px-4 py-2 text-sm font-medium text-dark-400 hover:text-dark-300
                      transition-colors"
         >
           Cancel
@@ -202,8 +190,7 @@ export function AlertForm({
 
 // Re-export sub-components
 export { ConditionBuilder } from './ConditionBuilder';
-export { ChannelConfig } from './ChannelConfig';
-export { ChannelList } from './ChannelList';
+export { ChannelSelector } from './ChannelSelector';
 export { TxFailedConfig } from './TxFailedConfig';
 export { BalanceConfig } from './BalanceConfig';
 export { EventConfig } from './EventConfig';

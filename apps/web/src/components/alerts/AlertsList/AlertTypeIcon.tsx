@@ -57,6 +57,37 @@ export function AlertTypeIcon({ type, className = 'w-5 h-5' }: AlertTypeIconProp
         </svg>
       );
 
+    case 'function_call':
+      // Code/function icon
+      return (
+        <svg {...iconProps}>
+          <polyline points="16 18 22 12 16 6" />
+          <polyline points="8 6 2 12 8 18" />
+        </svg>
+      );
+
+    case 'token_transfer':
+      // Arrow transfer icon
+      return (
+        <svg {...iconProps}>
+          <path d="M17 1l4 4-4 4" />
+          <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+          <path d="M7 23l-4-4 4-4" />
+          <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+        </svg>
+      );
+
+    case 'large_transaction':
+      // Large coin/diamond icon
+      return (
+        <svg {...iconProps}>
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 6v12" />
+          <path d="M6 10h12" />
+          <path d="M6 14h12" />
+        </svg>
+      );
+
     default:
       // Generic alert icon
       return (
@@ -75,6 +106,9 @@ export function getConditionLabel(type: AlertConditionType): string {
     balance_threshold: 'Balance Threshold',
     event_emitted: 'Event Emitted',
     gas_spike: 'Gas Spike',
+    function_call: 'Function Call',
+    token_transfer: 'Token Transfer',
+    large_transaction: 'Large Transaction',
   };
   return labels[type] || type;
 }
@@ -85,6 +119,13 @@ export function getConditionColor(type: AlertConditionType): string {
     balance_threshold: 'text-amber-400',
     event_emitted: 'text-green-400',
     gas_spike: 'text-purple-400',
+    function_call: 'text-cyan-400',
+    token_transfer: 'text-blue-400',
+    large_transaction: 'text-gold-400',
   };
-  return colors[type] || 'text-slate-400';
+  return colors[type] || 'text-dark-400';
 }
+
+// Aliases for backward compatibility
+export const getConditionTypeLabel = getConditionLabel;
+export const getConditionTypeColor = getConditionColor;

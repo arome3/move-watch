@@ -12,16 +12,18 @@ interface GasAnalyticsProps {
   period: DashboardPeriod;
   network?: Network;
   moduleAddress?: string;
+  sender?: string; // Filter by wallet address
 }
 
 export function GasAnalytics({
   period,
   network = 'testnet',
   moduleAddress,
+  sender,
 }: GasAnalyticsProps) {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['gas-analytics', period, network, moduleAddress],
-    queryFn: () => fetchGasAnalytics(period, network, moduleAddress),
+    queryKey: ['gas-analytics', period, network, moduleAddress, sender],
+    queryFn: () => fetchGasAnalytics(period, network, moduleAddress, sender),
     refetchInterval: 60000, // Refresh every minute for gas analytics
   });
 
@@ -31,7 +33,7 @@ export function GasAnalytics({
 
   if (error || !data) {
     return (
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 text-center">
+      <div className="bg-dark-800 rounded-lg border border-dark-700 p-8 text-center">
         <p className="text-red-400">Failed to load gas analytics</p>
       </div>
     );
@@ -41,7 +43,7 @@ export function GasAnalytics({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-white">Gas Analytics</h3>
-        <span className="text-sm text-slate-400">
+        <span className="text-sm text-dark-400">
           {data.dataPoints.length} data points
         </span>
       </div>
@@ -50,7 +52,7 @@ export function GasAnalytics({
       <GasStats stats={data.stats} />
 
       {/* Main Chart */}
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+      <div className="bg-dark-800 rounded-lg border border-dark-700 p-4">
         <GasChart data={data.dataPoints} period={period} />
       </div>
 
@@ -67,20 +69,20 @@ function GasAnalyticsSkeleton() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="h-6 w-32 bg-slate-700 rounded animate-pulse" />
+        <div className="h-6 w-32 bg-dark-700 rounded animate-pulse" />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="h-20 bg-slate-800 rounded-lg border border-slate-700 animate-pulse"
+            className="h-20 bg-dark-800 rounded-lg border border-dark-700 animate-pulse"
           />
         ))}
       </div>
-      <div className="h-80 bg-slate-800 rounded-lg border border-slate-700 animate-pulse" />
+      <div className="h-80 bg-dark-800 rounded-lg border border-dark-700 animate-pulse" />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="h-64 bg-slate-800 rounded-lg border border-slate-700 animate-pulse" />
-        <div className="h-64 bg-slate-800 rounded-lg border border-slate-700 animate-pulse" />
+        <div className="h-64 bg-dark-800 rounded-lg border border-dark-700 animate-pulse" />
+        <div className="h-64 bg-dark-800 rounded-lg border border-dark-700 animate-pulse" />
       </div>
     </div>
   );

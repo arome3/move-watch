@@ -48,7 +48,7 @@ export function GasChart({ data, period }: GasChartProps) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="h-80 flex items-center justify-center text-slate-400">
+      <div className="h-80 flex items-center justify-center text-dark-400">
         <p>No gas data available for this period</p>
       </div>
     );
@@ -61,16 +61,16 @@ export function GasChart({ data, period }: GasChartProps) {
           data={data}
           margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#1A3550" />
           <XAxis
             dataKey="timestamp"
             tickFormatter={formatXAxis}
-            stroke="#94a3b8"
+            stroke="#8AA2BC"
             fontSize={12}
             tickLine={false}
           />
           <YAxis
-            stroke="#94a3b8"
+            stroke="#8AA2BC"
             fontSize={12}
             tickFormatter={formatYAxis}
             tickLine={false}
@@ -78,11 +78,11 @@ export function GasChart({ data, period }: GasChartProps) {
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: '#1e293b',
-              border: '1px solid #334155',
+              backgroundColor: '#122840',
+              border: '1px solid #1A3550',
               borderRadius: '8px',
             }}
-            labelStyle={{ color: '#94a3b8' }}
+            labelStyle={{ color: '#8AA2BC' }}
             formatter={formatTooltipValue}
             labelFormatter={(label) =>
               new Date(label).toLocaleString([], {
@@ -103,10 +103,10 @@ export function GasChart({ data, period }: GasChartProps) {
             type="monotone"
             dataKey="average"
             name="Average"
-            stroke="#3b82f6"
+            stroke="#178582"
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 4, fill: '#3b82f6' }}
+            activeDot={{ r: 4, fill: '#178582' }}
           />
           <Line
             type="monotone"

@@ -36,6 +36,7 @@ export function SharedSimulationView({ simulation }: SharedSimulationViewProps) 
     gasBreakdown: simulation.gasBreakdown,
     stateChanges: simulation.stateChanges,
     events: simulation.events,
+    executionTrace: simulation.executionTrace,
     error: simulation.error,
     shareUrl: typeof window !== 'undefined' ? window.location.href : '',
   };
@@ -46,14 +47,14 @@ export function SharedSimulationView({ simulation }: SharedSimulationViewProps) 
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-slate-400 mb-2">
-          <Link href="/" className="hover:text-slate-300 transition-colors">
+        <div className="flex items-center gap-2 text-sm text-dark-400 mb-2">
+          <Link href="/" className="hover:text-dark-300 transition-colors">
             Simulator
           </Link>
           <span>/</span>
-          <span className="text-slate-500">Shared Result</span>
+          <span className="text-dark-500">Shared Result</span>
         </div>
-        <h1 className="text-2xl font-bold text-slate-50">Simulation Result</h1>
+        <h1 className="text-2xl font-bold text-dark-50">Simulation Result</h1>
       </div>
 
       {/* Expiration Warning */}
@@ -80,25 +81,25 @@ export function SharedSimulationView({ simulation }: SharedSimulationViewProps) 
       )}
 
       {/* Simulation Info */}
-      <div className="mb-6 bg-slate-800 rounded-xl border border-slate-700 p-4">
+      <div className="mb-6 bg-dark-800 rounded-xl border border-dark-700 p-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <span className="text-slate-500 block">Network</span>
-            <span className="text-slate-200 capitalize">{simulation.network}</span>
+            <span className="text-dark-500 block">Network</span>
+            <span className="text-dark-200 capitalize">{simulation.network}</span>
           </div>
           <div>
-            <span className="text-slate-500 block">Function</span>
+            <span className="text-dark-500 block">Function</span>
             <code className="text-primary-400 font-mono text-xs break-all">
               {simulation.functionName}
             </code>
           </div>
           <div>
-            <span className="text-slate-500 block">Created</span>
-            <span className="text-slate-200">{formatDate(simulation.createdAt)}</span>
+            <span className="text-dark-500 block">Created</span>
+            <span className="text-dark-200">{formatDate(simulation.createdAt)}</span>
           </div>
           <div>
-            <span className="text-slate-500 block">Expires</span>
-            <span className={expiringSoon ? 'text-amber-400' : 'text-slate-200'}>
+            <span className="text-dark-500 block">Expires</span>
+            <span className={expiringSoon ? 'text-amber-400' : 'text-dark-200'}>
               {formatDate(simulation.expiresAt)}
             </span>
           </div>

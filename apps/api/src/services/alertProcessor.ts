@@ -1,7 +1,15 @@
-import type { AlertCondition, NotificationPayload } from '@movewatch/shared';
+import type { AlertCondition, NotificationPayload, Network } from '@movewatch/shared';
 import { getMovementClient } from '../lib/movement.js';
-import { checkCooldown, setCooldown, recordTrigger } from './alerts.js';
+import { acquireCooldown, recordTrigger } from './alerts.js';
 import { sendNotifications } from './notifications.js';
+import { queueNotification, BackpressureError } from './notificationQueue.js';
+import { parseVMStatus, getErrorSummary, type ParsedVMStatus } from '../lib/vmStatus.js';
+import { broadcastAlert } from './websocketService.js';
+import { getBenchmark, type GasBenchmark } from './gasBenchmarkService.js';
+import { getNotificationConfig } from './channelConfigService.js';
+
+// Configuration
+const USE_ASYNC_NOTIFICATIONS = process.env.ASYNC_NOTIFICATIONS !== 'false';
 
 /**
  * Indexed event structure from the blockchain
@@ -19,6 +27,7 @@ export interface IndexedEvent {
 
 /**
  * Alert with channels for processing
+ * Supports both junction table structure (alertChannels) and flattened channels
  */
 interface AlertWithChannels {
   id: string;
@@ -27,7 +36,32 @@ interface AlertWithChannels {
   conditionType: string;
   conditionConfig: unknown;
   cooldownSeconds: number;
-  channels: Array<{ type: string; config: unknown; enabled: boolean }>;
+  alertChannels: Array<{
+    enabled: boolean;
+    channel: {
+      type: string;
+      config: unknown;
+    };
+  }>;
+}
+
+/**
+ * Helper to extract channels from alert for notification
+ * SECURITY: Decrypts channel configs before passing to notification service
+ */
+function getEnabledChannels(alert: AlertWithChannels): Array<{ type: string; config: unknown; enabled: boolean }> {
+  return alert.alertChannels
+    .filter((ac) => ac.enabled)
+    .map((ac) => {
+      const channelType = ac.channel.type.toLowerCase();
+      // Decrypt config for sending notifications
+      const decryptedConfig = getNotificationConfig(channelType, ac.channel.config);
+      return {
+        type: ac.channel.type,
+        config: decryptedConfig,
+        enabled: true, // Already filtered above
+      };
+    });
 }
 
 /**
@@ -47,26 +81,61 @@ export async function evaluateAlertConditions(
 
       if (!shouldTrigger) continue;
 
-      // Check cooldown
-      const canTrigger = await checkCooldown(alert.id);
-      if (!canTrigger) {
+      // Atomically check and acquire cooldown lock
+      // This prevents race conditions where multiple workers process the same alert
+      const acquired = await acquireCooldown(alert.id, alert.cooldownSeconds);
+      if (!acquired) {
         console.log(`Alert ${alert.id} in cooldown, skipping`);
         continue;
       }
 
-      // Set cooldown immediately to prevent duplicate triggers
-      await setCooldown(alert.id, alert.cooldownSeconds);
-
       // Build notification payload
       const payload = buildNotificationPayload(alert, event);
 
-      // Send notifications
-      const results = await sendNotifications(alert.channels, payload);
+      // Get enabled channels
+      const channels = getEnabledChannels(alert);
+
+      // Broadcast to connected WebSocket clients for real-time updates (always sync)
+      broadcastAlert(alert.id, alert.network, payload);
+
+      // Send notifications (async or sync based on configuration)
+      let results: Array<{ channel: string; success: boolean; error?: string }>;
+
+      if (USE_ASYNC_NOTIFICATIONS) {
+        try {
+          // Queue notifications for async processing (non-blocking)
+          await queueNotification(alert.id, channels, payload);
+          // Record as pending - actual results will be logged by the worker
+          results = channels.map((c) => ({
+            channel: c.type.toLowerCase(),
+            success: true, // Optimistically mark as queued
+            latencyMs: 0,
+          }));
+          console.log(`Alert ${alert.id} triggered, notifications queued for tx ${event.transactionHash}`);
+        } catch (queueError) {
+          // Handle backpressure gracefully - alert was processed, just couldn't queue notification
+          if (queueError instanceof BackpressureError) {
+            console.warn(
+              `[AlertProcessor] Backpressure: notification queue full for alert ${alert.id}. ` +
+                `Alert recorded but notification not sent.`
+            );
+            results = channels.map((c) => ({
+              channel: c.type.toLowerCase(),
+              success: false,
+              error: 'Notification queue full (backpressure)',
+            }));
+          } else {
+            throw queueError;
+          }
+        }
+      } else {
+        // Synchronous notification (legacy behavior)
+        results = await sendNotifications(channels, payload);
+        console.log(`Alert ${alert.id} triggered for tx ${event.transactionHash}`);
+      }
 
       // Record trigger
       await recordTrigger(alert.id, event.data, event.transactionHash, results);
-
-      console.log(`Alert ${alert.id} triggered for tx ${event.transactionHash}`);
     } catch (error) {
       console.error(`Error evaluating alert ${alert.id}:`, error);
     }
@@ -75,6 +144,9 @@ export async function evaluateAlertConditions(
 
 /**
  * Evaluate a single condition against an event
+ *
+ * NOTE: balance_threshold is handled by the dedicated BalanceChecker service
+ * which runs on a separate interval. This prevents expensive RPC calls on every event.
  */
 async function evaluateCondition(
   condition: AlertCondition,
@@ -86,13 +158,24 @@ async function evaluateCondition(
       return evaluateTxFailed(condition, event);
 
     case 'balance_threshold':
-      return evaluateBalanceThreshold(condition, network);
+      // Skip - handled by dedicated BalanceChecker service (balanceChecker.ts)
+      // Balance checks are expensive (RPC calls) and run on a separate interval
+      return false;
 
     case 'event_emitted':
       return evaluateEventEmitted(condition, event);
 
     case 'gas_spike':
-      return evaluateGasSpike(condition, event);
+      return evaluateGasSpike(condition, event, network);
+
+    case 'function_call':
+      return evaluateFunctionCall(condition, event);
+
+    case 'token_transfer':
+      return evaluateTokenTransfer(condition, event);
+
+    case 'large_transaction':
+      return evaluateLargeTransaction(condition, event);
 
     default:
       return false;
@@ -244,19 +327,214 @@ function evaluateEventEmitted(
 /**
  * Evaluate gas_spike condition
  * Triggers when gas usage exceeds normal range (threshold multiplier of average)
+ * Now uses real benchmark data from the gas benchmark service
  */
-function evaluateGasSpike(
+async function evaluateGasSpike(
   condition: { moduleAddress: string; thresholdMultiplier: number },
+  event: IndexedEvent,
+  network: 'mainnet' | 'testnet' | 'devnet'
+): Promise<boolean> {
+  // Must have a module address to evaluate
+  if (!event.moduleAddress) return false;
+
+  // Check module address match
+  const normalizedModule = condition.moduleAddress.toLowerCase();
+  const eventModule = event.moduleAddress.toLowerCase();
+
+  if (!eventModule.includes(normalizedModule)) return false;
+
+  // Build function path for benchmark lookup
+  const functionPath = event.functionName
+    ? `${event.moduleAddress}::${event.functionName}`
+    : event.moduleAddress;
+
+  try {
+    // Get real benchmark data for this function
+    const benchmark = await getBenchmark(network, functionPath);
+
+    // Use the 90th percentile as the baseline for spike detection
+    // This is more robust than average for detecting anomalies
+    const spikeThreshold = benchmark.p90 * condition.thresholdMultiplier;
+
+    // Log for monitoring
+    if (event.gasUsed > spikeThreshold) {
+      console.log(
+        `[GasSpike] Detected: ${functionPath} used ${event.gasUsed} gas, ` +
+          `threshold=${spikeThreshold} (p90=${benchmark.p90} * ${condition.thresholdMultiplier})`
+      );
+    }
+
+    return event.gasUsed > spikeThreshold;
+  } catch (error) {
+    // Fallback to conservative estimate if benchmark service fails
+    console.warn(`[GasSpike] Benchmark lookup failed, using fallback: ${error}`);
+    const fallbackThreshold = 10000 * condition.thresholdMultiplier;
+    return event.gasUsed > fallbackThreshold;
+  }
+}
+
+/**
+ * Evaluate function_call condition
+ * Triggers when a specific function is invoked
+ */
+function evaluateFunctionCall(
+  condition: {
+    moduleAddress: string;
+    moduleName: string;
+    functionName: string;
+    trackSuccess?: boolean;
+    trackFailed?: boolean;
+    filters?: { sender?: string; minGas?: number };
+  },
   event: IndexedEvent
 ): boolean {
-  // Check module address match
-  if (event.moduleAddress !== condition.moduleAddress) return false;
+  // Only check transaction events
+  if (event.type !== '_transaction') return false;
 
-  // TODO: In production, calculate average gas from historical data stored in Redis
-  // For now, use a baseline estimate
-  const estimatedAverageGas = 10000;
+  // Check success/failure tracking preferences
+  const trackSuccess = condition.trackSuccess ?? true;
+  const trackFailed = condition.trackFailed ?? false;
 
-  return event.gasUsed > estimatedAverageGas * condition.thresholdMultiplier;
+  if (event.success && !trackSuccess) return false;
+  if (!event.success && !trackFailed) return false;
+
+  // Build expected function path
+  const expectedPath = `${condition.moduleAddress}::${condition.moduleName}::${condition.functionName}`;
+  const eventFunction = event.functionName?.toLowerCase();
+  const expectedLower = expectedPath.toLowerCase();
+
+  // Check if event function matches (handle various formats)
+  if (!eventFunction) return false;
+
+  // Direct match or partial match
+  const matches =
+    eventFunction === expectedLower ||
+    eventFunction.endsWith(`::${condition.moduleName}::${condition.functionName}`.toLowerCase()) ||
+    eventFunction.includes(expectedLower);
+
+  if (!matches) return false;
+
+  // Apply filters if specified
+  if (condition.filters) {
+    // Sender filter
+    if (condition.filters.sender) {
+      const eventData = event.data as { sender?: string } | undefined;
+      const eventSender = eventData?.sender?.toLowerCase();
+      if (eventSender !== condition.filters.sender.toLowerCase()) {
+        return false;
+      }
+    }
+
+    // Minimum gas filter
+    if (condition.filters.minGas && event.gasUsed < condition.filters.minGas) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Evaluate token_transfer condition
+ * Monitors coin/token movements to/from an address
+ */
+function evaluateTokenTransfer(
+  condition: {
+    tokenType: string;
+    direction: 'in' | 'out' | 'both';
+    address: string;
+    minAmount?: string;
+    maxAmount?: string;
+  },
+  event: IndexedEvent
+): boolean {
+  // Check for deposit or withdraw events
+  const isDeposit = event.type.includes('DepositEvent') || event.type.includes('::Deposit');
+  const isWithdraw = event.type.includes('WithdrawEvent') || event.type.includes('::Withdraw');
+
+  if (!isDeposit && !isWithdraw) return false;
+
+  // Check direction filter
+  if (condition.direction === 'in' && !isDeposit) return false;
+  if (condition.direction === 'out' && !isWithdraw) return false;
+
+  // Check token type matches
+  if (!event.type.includes(condition.tokenType)) return false;
+
+  // Extract event data
+  const eventData = event.data as { account?: string; amount?: string } | undefined;
+  if (!eventData) return false;
+
+  // Check address matches
+  const eventAddress = eventData.account?.toLowerCase();
+  if (eventAddress !== condition.address.toLowerCase()) return false;
+
+  // Check amount filters
+  if (eventData.amount) {
+    const amount = BigInt(eventData.amount);
+
+    if (condition.minAmount && amount < BigInt(condition.minAmount)) {
+      return false;
+    }
+
+    if (condition.maxAmount && amount > BigInt(condition.maxAmount)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Evaluate large_transaction condition
+ * Alerts on high-value transfers above threshold
+ */
+function evaluateLargeTransaction(
+  condition: {
+    tokenType: string;
+    threshold: string;
+    addresses?: string[];
+  },
+  event: IndexedEvent
+): boolean {
+  // Check for transfer-related events
+  const isTransfer =
+    event.type.includes('DepositEvent') ||
+    event.type.includes('WithdrawEvent') ||
+    event.type.includes('::Deposit') ||
+    event.type.includes('::Withdraw') ||
+    event.type.includes('Transfer');
+
+  if (!isTransfer) return false;
+
+  // Check token type
+  if (!event.type.includes(condition.tokenType)) return false;
+
+  // Extract amount from event data
+  const eventData = event.data as { amount?: string; account?: string } | undefined;
+  if (!eventData?.amount) return false;
+
+  const amount = BigInt(eventData.amount);
+  const threshold = BigInt(condition.threshold);
+
+  // Check if amount exceeds threshold
+  if (amount < threshold) return false;
+
+  // If specific addresses are configured, check if this involves one
+  if (condition.addresses && condition.addresses.length > 0) {
+    const eventAddress = eventData.account?.toLowerCase();
+    const matchesAddress = condition.addresses.some(
+      (addr) => addr.toLowerCase() === eventAddress
+    );
+    if (!matchesAddress) return false;
+  }
+
+  console.log(
+    `[LargeTransaction] Detected: ${amount.toString()} ${condition.tokenType} ` +
+      `(threshold: ${condition.threshold}), tx: ${event.transactionHash}`
+  );
+
+  return true;
 }
 
 /**
@@ -266,6 +544,13 @@ function buildNotificationPayload(
   alert: AlertWithChannels,
   event: IndexedEvent
 ): NotificationPayload {
+  // Parse VM status for failed transactions
+  let parsedError: ParsedVMStatus | undefined;
+  if (!event.success && event.type === '_transaction') {
+    const vmStatus = (event.data as { vmStatus?: string })?.vmStatus || '';
+    parsedError = parseVMStatus(vmStatus);
+  }
+
   return {
     alertId: alert.id,
     alertName: alert.name,
@@ -275,5 +560,13 @@ function buildNotificationPayload(
     transactionHash: event.transactionHash,
     timestamp: new Date().toISOString(),
     link: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/tx/${event.transactionHash}`,
+    // Enhanced error information
+    errorInfo: parsedError ? {
+      code: parsedError.code,
+      name: parsedError.name,
+      description: parsedError.description,
+      category: parsedError.category,
+      suggestion: parsedError.suggestion,
+    } : undefined,
   };
 }

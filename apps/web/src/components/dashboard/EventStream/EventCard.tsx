@@ -34,18 +34,18 @@ function getExplorerUrl(hash: string, network: string): string {
 
 export function EventCard({ event, network }: EventCardProps) {
   return (
-    <div className="p-4 bg-slate-900 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors">
+    <div className="p-4 bg-dark-900 rounded-lg border border-dark-700 hover:border-dark-600 transition-colors">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <code className="text-sm text-primary-400 truncate">
               {event.eventType}
             </code>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-dark-500">
               #{event.sequenceNumber}
             </span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-dark-500 mt-1">
             {formatTimestamp(event.timestamp)}
           </p>
         </div>
@@ -54,7 +54,7 @@ export function EventCard({ event, network }: EventCardProps) {
             href={getExplorerUrl(event.transactionHash, network)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-white"
+            className="flex items-center gap-1 text-xs text-dark-400 hover:text-white"
           >
             <code>{truncateHash(event.transactionHash)}</code>
             <svg
@@ -74,7 +74,7 @@ export function EventCard({ event, network }: EventCardProps) {
         )}
       </div>
       <div className="mt-3">
-        <pre className="text-xs text-slate-300 bg-slate-800 rounded p-2 overflow-x-auto max-h-32">
+        <pre className="text-xs text-dark-300 bg-dark-800 rounded p-2 overflow-x-auto max-h-32">
           {JSON.stringify(event.data, null, 2)}
         </pre>
       </div>

@@ -16,7 +16,7 @@ export default function EditAlertPage() {
     formName,
     formNetwork,
     formCondition,
-    formChannels,
+    formChannelIds,
     formCooldown,
     formErrors,
     isLoading,
@@ -26,8 +26,7 @@ export default function EditAlertPage() {
     setFormName,
     setFormNetwork,
     setFormCondition,
-    addChannel,
-    removeChannel,
+    setFormChannelIds,
     setFormCooldown,
     updateAlert,
     loadAlertToForm,
@@ -65,12 +64,12 @@ export default function EditAlertPage() {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-slate-800 rounded w-1/3" />
-          <div className="h-4 bg-slate-800 rounded w-1/2" />
+          <div className="h-8 bg-dark-800 rounded w-1/3" />
+          <div className="h-4 bg-dark-800 rounded w-1/2" />
           <div className="space-y-4">
-            <div className="h-24 bg-slate-800 rounded-lg" />
-            <div className="h-48 bg-slate-800 rounded-lg" />
-            <div className="h-32 bg-slate-800 rounded-lg" />
+            <div className="h-24 bg-dark-800 rounded-lg" />
+            <div className="h-48 bg-dark-800 rounded-lg" />
+            <div className="h-32 bg-dark-800 rounded-lg" />
           </div>
         </div>
       </div>
@@ -82,8 +81,8 @@ export default function EditAlertPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center py-12">
           <div className="text-4xl mb-4">?</div>
-          <h2 className="text-xl font-semibold text-slate-200 mb-2">Alert not found</h2>
-          <p className="text-slate-400 mb-6">This alert may have been deleted.</p>
+          <h2 className="text-xl font-semibold text-dark-200 mb-2">Alert not found</h2>
+          <p className="text-dark-400 mb-6">This alert may have been deleted.</p>
           <button
             onClick={() => router.push('/alerts')}
             className="text-primary-400 hover:text-primary-300"
@@ -101,15 +100,15 @@ export default function EditAlertPage() {
       <div className="mb-8">
         <button
           onClick={handleCancel}
-          className="text-sm text-slate-400 hover:text-slate-300 mb-4 flex items-center gap-1"
+          className="text-sm text-dark-400 hover:text-dark-300 mb-4 flex items-center gap-1"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Alert
         </button>
-        <h1 className="text-2xl font-bold text-slate-100">Edit Alert</h1>
-        <p className="text-sm text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold text-dark-100">Edit Alert</h1>
+        <p className="text-sm text-dark-400 mt-1">
           Modify alert conditions and notification settings
         </p>
       </div>
@@ -126,14 +125,13 @@ export default function EditAlertPage() {
         name={formName}
         network={formNetwork}
         condition={formCondition}
-        channels={formChannels}
+        channelIds={formChannelIds}
         cooldown={formCooldown}
         errors={formErrors}
         onNameChange={setFormName}
         onNetworkChange={setFormNetwork}
         onConditionChange={setFormCondition}
-        onAddChannel={addChannel}
-        onRemoveChannel={removeChannel}
+        onChannelIdsChange={setFormChannelIds}
         onCooldownChange={setFormCooldown}
         onSubmit={handleSubmit}
         onCancel={handleCancel}

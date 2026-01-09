@@ -214,40 +214,55 @@ export async function getDashboardStats(
   userId: string,
   period: DashboardPeriod,
   network: Network = 'testnet',
-  moduleAddress?: string
+  moduleAddress?: string,
+  sender?: string // Filter by wallet address
 ): Promise<DashboardStats> {
   const client = getMovementClient(network);
   const periodStart = getPeriodStart(period);
 
-  // Get watched contracts for filtering
-  const watchedContracts = await getWatchedContracts(userId);
+  // Get watched contracts for filtering (only if not filtering by sender)
+  const watchedContracts = sender ? [] : await getWatchedContracts(userId);
   const moduleAddresses = moduleAddress
     ? [moduleAddress]
     : watchedContracts.map((c) => c.moduleAddress);
 
-  // Fetch recent transactions from chain
+  // Fetch transactions from chain
   let transactions: TransactionListItem[] = [];
 
   try {
-    const rawTxs = await client.getTransactions({
-      options: { limit: 1000 }, // Fetch up to 1000 recent transactions
-    });
+    let rawTxs: Record<string, unknown>[];
+
+    if (sender) {
+      // When filtering by wallet, use account-specific API
+      rawTxs = (await client.getAccountTransactions({
+        accountAddress: sender,
+        options: { limit: 100 },
+      })) as Record<string, unknown>[];
+    } else {
+      // Otherwise fetch recent network transactions
+      rawTxs = (await client.getTransactions({
+        options: { limit: 1000 },
+      })) as Record<string, unknown>[];
+    }
 
     // Parse and filter transactions
     for (const tx of rawTxs) {
       const parsed = parseTransaction(tx as Record<string, unknown>, network);
       if (parsed) {
-        // Filter by module address if we have watched contracts
+        // Filter by module address if we have watched contracts (and no sender filter)
         if (
-          moduleAddresses.length === 0 ||
-          moduleAddresses.some((addr) =>
+          !sender &&
+          moduleAddresses.length > 0 &&
+          !moduleAddresses.some((addr) =>
             parsed.moduleAddress.toLowerCase().includes(addr.toLowerCase())
           )
         ) {
-          // Filter by time period
-          if (new Date(parsed.timestamp) >= periodStart) {
-            transactions.push(parsed);
-          }
+          continue;
+        }
+
+        // Filter by time period
+        if (new Date(parsed.timestamp) >= periodStart) {
+          transactions.push(parsed);
         }
       }
     }
@@ -312,14 +327,14 @@ export async function getDashboardStats(
 export async function getTransactions(
   userId: string,
   network: Network = 'testnet',
-  options: TransactionFilterOptions = {}
+  options: TransactionFilterOptions & { sender?: string } = {}
 ): Promise<PaginatedTransactionsResponse> {
-  const { moduleAddress, status, search, limit = 50, offset = 0 } = options;
+  const { moduleAddress, status, search, limit = 50, offset = 0, sender } = options;
 
   const client = getMovementClient(network);
 
-  // Get watched contracts for filtering
-  const watchedContracts = await getWatchedContracts(userId);
+  // Get watched contracts for filtering (only if not filtering by sender)
+  const watchedContracts = sender ? [] : await getWatchedContracts(userId);
   const moduleAddresses = moduleAddress
     ? [moduleAddress]
     : watchedContracts.map((c) => c.moduleAddress);
@@ -335,42 +350,58 @@ export async function getTransactions(
         });
         const parsed = parseTransaction(tx as Record<string, unknown>, network);
         if (parsed) {
-          transactions = [parsed];
+          // Still apply sender filter for hash search
+          if (!sender || parsed.sender.toLowerCase() === sender.toLowerCase()) {
+            transactions = [parsed];
+          }
         }
       } catch {
         // Transaction not found, continue with empty results
       }
     } else {
-      // Fetch recent transactions
-      const rawTxs = await client.getTransactions({
-        options: { limit: 500 },
-      });
+      let rawTxs: Record<string, unknown>[];
+
+      if (sender) {
+        // When filtering by wallet, use account-specific API
+        rawTxs = (await client.getAccountTransactions({
+          accountAddress: sender,
+          options: { limit: 200 },
+        })) as Record<string, unknown>[];
+      } else {
+        // Otherwise fetch recent network transactions
+        rawTxs = (await client.getTransactions({
+          options: { limit: 500 },
+        })) as Record<string, unknown>[];
+      }
 
       // Parse and filter transactions
       for (const tx of rawTxs) {
         const parsed = parseTransaction(tx as Record<string, unknown>, network);
         if (parsed) {
-          // Filter by module address
+          // Filter by module address (only if not filtering by sender)
           if (
-            moduleAddresses.length === 0 ||
-            moduleAddresses.some((addr) =>
+            !sender &&
+            moduleAddresses.length > 0 &&
+            !moduleAddresses.some((addr) =>
               parsed.moduleAddress.toLowerCase().includes(addr.toLowerCase())
             )
           ) {
-            // Filter by status
-            if (status === 'success' && !parsed.success) continue;
-            if (status === 'failed' && parsed.success) continue;
-
-            // Filter by search (function name)
-            if (
-              search &&
-              !parsed.functionName.toLowerCase().includes(search.toLowerCase())
-            ) {
-              continue;
-            }
-
-            transactions.push(parsed);
+            continue;
           }
+
+          // Filter by status
+          if (status === 'success' && !parsed.success) continue;
+          if (status === 'failed' && parsed.success) continue;
+
+          // Filter by search (function name)
+          if (
+            search &&
+            !parsed.functionName.toLowerCase().includes(search.toLowerCase())
+          ) {
+            continue;
+          }
+
+          transactions.push(parsed);
         }
       }
     }
@@ -444,14 +475,14 @@ export async function getTransactionDetail(
 export async function getEvents(
   userId: string,
   network: Network = 'testnet',
-  options: EventFilterOptions = {}
+  options: EventFilterOptions & { sender?: string } = {}
 ): Promise<PaginatedEventsResponse> {
-  const { moduleAddress, eventType, limit = 100, offset = 0 } = options;
+  const { moduleAddress, eventType, limit = 100, offset = 0, sender } = options;
 
   const client = getMovementClient(network);
 
-  // Get watched contracts for filtering
-  const watchedContracts = await getWatchedContracts(userId);
+  // Get watched contracts for filtering (only if not filtering by sender)
+  const watchedContracts = sender ? [] : await getWatchedContracts(userId);
   const moduleAddresses = moduleAddress
     ? [moduleAddress]
     : watchedContracts.map((c) => c.moduleAddress);
@@ -459,10 +490,20 @@ export async function getEvents(
   let events: EventListItem[] = [];
 
   try {
-    // Fetch recent transactions and extract events
-    const rawTxs = await client.getTransactions({
-      options: { limit: 200 },
-    });
+    let rawTxs: Record<string, unknown>[];
+
+    if (sender) {
+      // When filtering by wallet, use account-specific API
+      rawTxs = (await client.getAccountTransactions({
+        accountAddress: sender,
+        options: { limit: 100 },
+      })) as Record<string, unknown>[];
+    } else {
+      // Otherwise fetch recent network transactions
+      rawTxs = (await client.getTransactions({
+        options: { limit: 200 },
+      })) as Record<string, unknown>[];
+    }
 
     for (const tx of rawTxs) {
       const txRecord = tx as Record<string, unknown>;
@@ -477,8 +518,9 @@ export async function getEvents(
 
       const txModuleAddress = `${parts[0]}::${parts[1]}`;
 
-      // Filter by module address
+      // Filter by module address (only if not filtering by sender)
       if (
+        !sender &&
         moduleAddresses.length > 0 &&
         !moduleAddresses.some((addr) =>
           txModuleAddress.toLowerCase().includes(addr.toLowerCase())
@@ -533,14 +575,15 @@ export async function getGasAnalytics(
   userId: string,
   period: DashboardPeriod,
   network: Network = 'testnet',
-  moduleAddress?: string
+  moduleAddress?: string,
+  sender?: string // Filter by wallet address
 ): Promise<GasAnalytics> {
   const client = getMovementClient(network);
   const periodStart = getPeriodStart(period);
   const intervalMs = getIntervalMs(period);
 
-  // Get watched contracts for filtering
-  const watchedContracts = await getWatchedContracts(userId);
+  // Get watched contracts for filtering (only if not filtering by sender)
+  const watchedContracts = sender ? [] : await getWatchedContracts(userId);
   const moduleAddresses = moduleAddress
     ? [moduleAddress]
     : watchedContracts.map((c) => c.moduleAddress);
@@ -548,22 +591,38 @@ export async function getGasAnalytics(
   let transactions: TransactionListItem[] = [];
 
   try {
-    const rawTxs = await client.getTransactions({
-      options: { limit: 1000 },
-    });
+    let rawTxs: Record<string, unknown>[];
+
+    if (sender) {
+      // When filtering by wallet, use account-specific API
+      rawTxs = (await client.getAccountTransactions({
+        accountAddress: sender,
+        options: { limit: 100 },
+      })) as Record<string, unknown>[];
+    } else {
+      // Otherwise fetch recent network transactions
+      rawTxs = (await client.getTransactions({
+        options: { limit: 1000 },
+      })) as Record<string, unknown>[];
+    }
 
     for (const tx of rawTxs) {
       const parsed = parseTransaction(tx as Record<string, unknown>, network);
       if (parsed) {
+        // Filter by module address (only if not filtering by sender)
         if (
-          moduleAddresses.length === 0 ||
-          moduleAddresses.some((addr) =>
+          !sender &&
+          moduleAddresses.length > 0 &&
+          !moduleAddresses.some((addr) =>
             parsed.moduleAddress.toLowerCase().includes(addr.toLowerCase())
           )
         ) {
-          if (new Date(parsed.timestamp) >= periodStart) {
-            transactions.push(parsed);
-          }
+          continue;
+        }
+
+        // Filter by time period
+        if (new Date(parsed.timestamp) >= periodStart) {
+          transactions.push(parsed);
         }
       }
     }

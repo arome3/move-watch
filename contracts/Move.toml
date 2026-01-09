@@ -1,0 +1,10 @@
+[package]
+name = "MoveWatchDemo"
+version = "1.0.0"
+authors = ["MoveWatch"]
+
+[addresses]
+movewatch_demo = "_"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework", rev = "aptos-node-v1.14.0" }

@@ -17,15 +17,14 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 /**
  * Get authentication headers for API requests
+ * Uses the JWT accessToken from NextAuth session
  */
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const session = await getSession();
 
-  if (session?.user?.id) {
-    // In production, this would be a JWT token
-    // For now, we pass the user ID for the backend mock auth
+  if (session?.accessToken) {
     return {
-      'X-User-ID': session.user.id,
+      Authorization: `Bearer ${session.accessToken}`,
     };
   }
 
@@ -85,9 +84,10 @@ function buildQueryString(params: Record<string, unknown>): string {
 export async function fetchDashboardStats(
   period: DashboardPeriod = '24h',
   network: Network = 'testnet',
-  moduleAddress?: string
+  moduleAddress?: string,
+  sender?: string
 ): Promise<DashboardStats> {
-  const query = buildQueryString({ period, network, moduleAddress });
+  const query = buildQueryString({ period, network, moduleAddress, sender });
   return fetchApi<DashboardStats>(`/stats${query}`);
 }
 
@@ -100,7 +100,7 @@ export async function fetchDashboardStats(
  */
 export async function fetchTransactions(
   network: Network = 'testnet',
-  options: TransactionFilterOptions = {}
+  options: TransactionFilterOptions & { sender?: string } = {}
 ): Promise<PaginatedTransactionsResponse> {
   const query = buildQueryString({ network, ...options });
   return fetchApi<PaginatedTransactionsResponse>(`/transactions${query}`);
@@ -133,7 +133,7 @@ export async function fetchTransactionDetail(
  */
 export async function fetchEvents(
   network: Network = 'testnet',
-  options: EventFilterOptions = {}
+  options: EventFilterOptions & { sender?: string } = {}
 ): Promise<PaginatedEventsResponse> {
   const query = buildQueryString({ network, ...options });
   return fetchApi<PaginatedEventsResponse>(`/events${query}`);
@@ -149,9 +149,10 @@ export async function fetchEvents(
 export async function fetchGasAnalytics(
   period: DashboardPeriod = '24h',
   network: Network = 'testnet',
-  moduleAddress?: string
+  moduleAddress?: string,
+  sender?: string
 ): Promise<GasAnalytics> {
-  const query = buildQueryString({ period, network, moduleAddress });
+  const query = buildQueryString({ period, network, moduleAddress, sender });
   return fetchApi<GasAnalytics>(`/gas${query}`);
 }
 

@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { useSimulatorStore } from '@/stores/simulator';
 import { NetworkSelector } from './NetworkSelector';
-import { FunctionInput } from './FunctionInput';
+import { FunctionSelector } from './FunctionSelector';
 import { TypeArguments } from './TypeArguments';
 import { ArgumentsEditor } from './ArgumentsEditor';
 import { GasOptions } from './GasOptions';
+import { ForkOptions } from './ForkOptions';
+import { DemoPresets } from './DemoPresets';
 
 interface TransactionBuilderProps {
   onSimulate: () => Promise<void>;
@@ -15,7 +17,8 @@ interface TransactionBuilderProps {
 
 export function TransactionBuilder({ onSimulate, isLoading }: TransactionBuilderProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const { isValid } = useSimulatorStore();
+  const [showForkOptions, setShowForkOptions] = useState(false);
+  const { isValid, forkEnabled, whatIfEnabled } = useSimulatorStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,19 +28,22 @@ export function TransactionBuilder({ onSimulate, isLoading }: TransactionBuilder
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-slate-800 rounded-xl border border-slate-700 p-6 space-y-6">
+      <div className="bg-dark-800 rounded-xl border border-dark-700 p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-50">Transaction Builder</h2>
-          <span className="text-xs text-slate-500 bg-slate-900 px-2 py-1 rounded">
-            Entry Function
-          </span>
+          <h2 className="text-lg font-semibold text-dark-50">Transaction Builder</h2>
+          <div className="flex items-center gap-2">
+            <DemoPresets />
+            <span className="text-xs text-dark-500 bg-dark-900 px-2 py-1 rounded">
+              Entry Function
+            </span>
+          </div>
         </div>
 
         {/* Network Selection */}
         <NetworkSelector />
 
-        {/* Function Path */}
-        <FunctionInput />
+        {/* Function Path with Auto-complete */}
+        <FunctionSelector />
 
         {/* Type Arguments */}
         <TypeArguments />
@@ -46,11 +52,11 @@ export function TransactionBuilder({ onSimulate, isLoading }: TransactionBuilder
         <ArgumentsEditor />
 
         {/* Advanced Options (collapsible) */}
-        <div className="border-t border-slate-700 pt-4">
+        <div className="border-t border-dark-700 pt-4">
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-300 transition-colors"
+            className="flex items-center gap-2 text-sm text-dark-400 hover:text-dark-300 transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -69,6 +75,36 @@ export function TransactionBuilder({ onSimulate, isLoading }: TransactionBuilder
 
           {showAdvanced && <GasOptions />}
         </div>
+
+        {/* Fork & What-If Options (collapsible) */}
+        <div className="border-t border-dark-700 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowForkOptions(!showForkOptions)}
+            className="flex items-center gap-2 text-sm text-dark-400 hover:text-dark-300 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className={`h-4 w-4 transition-transform ${showForkOptions ? 'rotate-90' : ''}`}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Fork &amp; What-If Scenarios
+            {(forkEnabled || whatIfEnabled) && (
+              <span className="ml-2 px-1.5 py-0.5 text-[10px] font-medium bg-primary-500/20 text-primary-400 rounded">
+                Active
+              </span>
+            )}
+          </button>
+
+          {showForkOptions && <ForkOptions />}
+        </div>
       </div>
 
       {/* Simulate Button */}
@@ -79,7 +115,7 @@ export function TransactionBuilder({ onSimulate, isLoading }: TransactionBuilder
                    ${
                      isValid && !isLoading
                        ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-lg shadow-primary-500/25'
-                       : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                       : 'bg-dark-700 text-dark-500 cursor-not-allowed'
                    }`}
       >
         {isLoading ? (
@@ -126,9 +162,9 @@ export function TransactionBuilder({ onSimulate, isLoading }: TransactionBuilder
       </button>
 
       {/* Keyboard shortcut hint */}
-      <p className="text-center text-xs text-slate-500">
-        Press <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">Cmd</kbd> +{' '}
-        <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-slate-400">Enter</kbd> to simulate
+      <p className="text-center text-xs text-dark-500">
+        Press <kbd className="px-1.5 py-0.5 bg-dark-800 rounded text-dark-400">Cmd</kbd> +{' '}
+        <kbd className="px-1.5 py-0.5 bg-dark-800 rounded text-dark-400">Enter</kbd> to simulate
       </p>
     </form>
   );

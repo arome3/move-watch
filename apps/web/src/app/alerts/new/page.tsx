@@ -11,7 +11,7 @@ export default function NewAlertPage() {
     formName,
     formNetwork,
     formCondition,
-    formChannels,
+    formChannelIds,
     formCooldown,
     formErrors,
     isCreating,
@@ -19,8 +19,7 @@ export default function NewAlertPage() {
     setFormName,
     setFormNetwork,
     setFormCondition,
-    addChannel,
-    removeChannel,
+    setFormChannelIds,
     setFormCooldown,
     createAlert,
     resetForm,
@@ -48,15 +47,15 @@ export default function NewAlertPage() {
       <div className="mb-8">
         <button
           onClick={handleCancel}
-          className="text-sm text-slate-400 hover:text-slate-300 mb-4 flex items-center gap-1"
+          className="text-sm text-dark-400 hover:text-dark-300 mb-4 flex items-center gap-1"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Alerts
         </button>
-        <h1 className="text-2xl font-bold text-slate-100">Create Alert</h1>
-        <p className="text-sm text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold text-dark-100">Create Alert</h1>
+        <p className="text-sm text-dark-400 mt-1">
           Set up automated monitoring for on-chain conditions
         </p>
       </div>
@@ -73,14 +72,13 @@ export default function NewAlertPage() {
         name={formName}
         network={formNetwork}
         condition={formCondition}
-        channels={formChannels}
+        channelIds={formChannelIds}
         cooldown={formCooldown}
         errors={formErrors}
         onNameChange={setFormName}
         onNetworkChange={setFormNetwork}
         onConditionChange={setFormCondition}
-        onAddChannel={addChannel}
-        onRemoveChannel={removeChannel}
+        onChannelIdsChange={setFormChannelIds}
         onCooldownChange={setFormCooldown}
         onSubmit={handleSubmit}
         onCancel={handleCancel}

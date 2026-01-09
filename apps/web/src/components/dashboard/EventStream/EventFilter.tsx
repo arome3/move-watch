@@ -27,13 +27,13 @@ export function EventFilter({ value, onChange }: EventFilterProps) {
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
         placeholder="Filter by event type..."
-        className="w-full pl-3 pr-8 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        className="w-full pl-3 pr-8 py-1.5 bg-dark-800 border border-dark-700 rounded-lg text-sm text-white placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
       />
       {localValue && (
         <button
           type="button"
           onClick={handleClear}
-          className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-white"
+          className="absolute inset-y-0 right-0 pr-2 flex items-center text-dark-400 hover:text-white"
         >
           <svg
             className="w-4 h-4"

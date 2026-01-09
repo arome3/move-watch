@@ -11,12 +11,12 @@ interface GasSpikeConfigProps {
 export function GasSpikeConfig({ value, onChange, errors = {} }: GasSpikeConfigProps) {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-dark-400">
         Get notified when gas usage exceeds normal levels for a module.
       </p>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="block text-sm font-medium text-dark-300 mb-2">
           Module Address <span className="text-red-400">*</span>
         </label>
         <input
@@ -26,22 +26,22 @@ export function GasSpikeConfig({ value, onChange, errors = {} }: GasSpikeConfigP
             onChange({ ...value, moduleAddress: e.target.value })
           }
           placeholder="0x1::coin"
-          className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm font-mono
-                     text-slate-100 placeholder:text-slate-600
+          className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm font-mono
+                     text-dark-100 placeholder:text-dark-600
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      transition-colors
-                     ${errors.moduleAddress ? 'border-red-500' : 'border-slate-700'}`}
+                     ${errors.moduleAddress ? 'border-red-500' : 'border-dark-700'}`}
         />
         {errors.moduleAddress && (
           <p className="mt-1 text-xs text-red-400">{errors.moduleAddress}</p>
         )}
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-dark-500">
           Format: 0x[address]::[module_name]
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="block text-sm font-medium text-dark-300 mb-2">
           Threshold Multiplier <span className="text-red-400">*</span>
         </label>
         <div className="flex items-center gap-3">
@@ -54,23 +54,23 @@ export function GasSpikeConfig({ value, onChange, errors = {} }: GasSpikeConfigP
             onChange={(e) =>
               onChange({ ...value, thresholdMultiplier: parseFloat(e.target.value) })
             }
-            className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+            className="flex-1 h-2 bg-dark-700 rounded-lg appearance-none cursor-pointer"
           />
-          <span className="w-16 text-center font-mono text-slate-100">
+          <span className="w-16 text-center font-mono text-dark-100">
             {value.thresholdMultiplier}x
           </span>
         </div>
         {errors.thresholdMultiplier && (
           <p className="mt-1 text-xs text-red-400">{errors.thresholdMultiplier}</p>
         )}
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-dark-500">
           Alert when gas usage is {value.thresholdMultiplier}x above average
         </p>
       </div>
 
-      <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
-        <p className="text-xs text-slate-400">
-          <strong className="text-slate-300">How it works:</strong> We track the
+      <div className="bg-dark-800/50 rounded-lg p-3 border border-dark-700">
+        <p className="text-xs text-dark-400">
+          <strong className="text-dark-300">How it works:</strong> We track the
           average gas usage for the module over time. When a transaction uses{' '}
           {value.thresholdMultiplier}x more gas than the average, you'll be notified.
         </p>

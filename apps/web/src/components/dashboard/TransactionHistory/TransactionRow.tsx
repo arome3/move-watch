@@ -47,8 +47,8 @@ export function TransactionRow({
 }: TransactionRowProps) {
   return (
     <div
-      className={`group p-4 border-b border-slate-700 hover:bg-slate-800/50 cursor-pointer transition-colors ${
-        isExpanded ? 'bg-slate-800/50' : ''
+      className={`group p-4 border-b border-dark-700 hover:bg-dark-800/50 cursor-pointer transition-colors ${
+        isExpanded ? 'bg-dark-800/50' : ''
       }`}
       onClick={onClick}
     >
@@ -66,7 +66,7 @@ export function TransactionRow({
             <code className="text-sm text-white font-mono">
               {truncateHash(transaction.hash)}
             </code>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-dark-500 mt-0.5">
               {formatTimestamp(transaction.timestamp)}
             </p>
           </div>
@@ -74,7 +74,7 @@ export function TransactionRow({
 
         {/* Function */}
         <div className="hidden md:block flex-1 min-w-0">
-          <p className="text-sm text-slate-300 truncate">
+          <p className="text-sm text-dark-300 truncate">
             {transaction.moduleAddress}::
             <span className="text-primary-400">{transaction.functionName}</span>
           </p>
@@ -82,7 +82,7 @@ export function TransactionRow({
 
         {/* Gas */}
         <div className="hidden sm:block text-right">
-          <p className="text-sm text-slate-300">
+          <p className="text-sm text-dark-300">
             {transaction.gasUsed.toLocaleString()} gas
           </p>
         </div>
@@ -105,7 +105,7 @@ export function TransactionRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="text-slate-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+            className="text-dark-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <svg
               className="w-4 h-4"
@@ -124,7 +124,7 @@ export function TransactionRow({
 
           {/* Expand icon */}
           <svg
-            className={`w-4 h-4 text-slate-400 transition-transform ${
+            className={`w-4 h-4 text-dark-400 transition-transform ${
               isExpanded ? 'rotate-180' : ''
             }`}
             fill="none"
@@ -143,7 +143,7 @@ export function TransactionRow({
 
       {/* Mobile function display */}
       <div className="md:hidden mt-2">
-        <p className="text-sm text-slate-400 truncate">
+        <p className="text-sm text-dark-400 truncate">
           {transaction.moduleAddress}::{transaction.functionName}
         </p>
       </div>

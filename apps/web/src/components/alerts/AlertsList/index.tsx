@@ -6,9 +6,11 @@ import { AlertCard } from './AlertCard';
 interface AlertsListProps {
   alerts: AlertResponse[];
   isLoading: boolean;
-  isUpdating: boolean;
+  isUpdating?: boolean;
+  isToggling?: boolean;
   isTesting: boolean;
   testingAlertId?: string;
+  onView?: (id: string) => void;
   onToggle: (id: string, enabled: boolean) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -19,42 +21,46 @@ export function AlertsList({
   alerts,
   isLoading,
   isUpdating,
+  isToggling,
   isTesting,
   testingAlertId,
+  onView,
   onToggle,
   onEdit,
   onDelete,
   onTest,
 }: AlertsListProps) {
+  // Support both isUpdating and isToggling prop names
+  const updating = isUpdating ?? isToggling ?? false;
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="bg-slate-800 border border-slate-700 rounded-lg p-4 animate-pulse"
+            className="bg-dark-800 border border-dark-700 rounded-lg p-4 animate-pulse"
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 bg-slate-700 rounded-lg" />
+              <div className="w-9 h-9 bg-dark-700 rounded-lg" />
               <div className="flex-1">
-                <div className="h-4 bg-slate-700 rounded w-3/4 mb-2" />
-                <div className="h-3 bg-slate-700 rounded w-1/2" />
+                <div className="h-4 bg-dark-700 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-dark-700 rounded w-1/2" />
               </div>
-              <div className="h-6 w-16 bg-slate-700 rounded-full" />
+              <div className="h-6 w-16 bg-dark-700 rounded-full" />
             </div>
-            <div className="grid grid-cols-3 gap-4 py-3 border-t border-b border-slate-700 mb-4">
+            <div className="grid grid-cols-3 gap-4 py-3 border-t border-b border-dark-700 mb-4">
               {[1, 2, 3].map((j) => (
                 <div key={j}>
-                  <div className="h-3 bg-slate-700 rounded w-1/2 mb-2" />
-                  <div className="h-4 bg-slate-700 rounded w-3/4" />
+                  <div className="h-3 bg-dark-700 rounded w-1/2 mb-2" />
+                  <div className="h-4 bg-dark-700 rounded w-3/4" />
                 </div>
               ))}
             </div>
             <div className="flex gap-2">
-              <div className="flex-1 h-9 bg-slate-700 rounded-lg" />
-              <div className="w-16 h-9 bg-slate-700 rounded-lg" />
-              <div className="w-9 h-9 bg-slate-700 rounded-lg" />
-              <div className="w-9 h-9 bg-slate-700 rounded-lg" />
+              <div className="flex-1 h-9 bg-dark-700 rounded-lg" />
+              <div className="w-16 h-9 bg-dark-700 rounded-lg" />
+              <div className="w-9 h-9 bg-dark-700 rounded-lg" />
+              <div className="w-9 h-9 bg-dark-700 rounded-lg" />
             </div>
           </div>
         ))}
@@ -65,10 +71,10 @@ export function AlertsList({
   if (alerts.length === 0) {
     return (
       <div className="text-center py-12 px-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800 mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-dark-800 mb-4">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="w-8 h-8 text-slate-400"
+            className="w-8 h-8 text-dark-400"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -79,8 +85,8 @@ export function AlertsList({
             <line x1="1" y1="1" x2="23" y2="23" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-slate-200 mb-2">No alerts yet</h3>
-        <p className="text-slate-400 max-w-sm mx-auto">
+        <h3 className="text-lg font-medium text-dark-200 mb-2">No alerts yet</h3>
+        <p className="text-dark-400 max-w-sm mx-auto">
           Create your first alert to start monitoring on-chain conditions and receive notifications.
         </p>
       </div>
@@ -93,11 +99,12 @@ export function AlertsList({
         <AlertCard
           key={alert.id}
           alert={alert}
+          onView={onView}
           onToggle={onToggle}
           onEdit={onEdit}
           onDelete={onDelete}
           onTest={onTest}
-          isUpdating={isUpdating}
+          isUpdating={updating}
           isTesting={isTesting && testingAlertId === alert.id}
         />
       ))}

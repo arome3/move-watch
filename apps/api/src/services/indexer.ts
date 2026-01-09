@@ -2,10 +2,13 @@ import { getMovementClient } from '../lib/movement.js';
 import { redis } from '../lib/redis.js';
 import { getActiveAlerts } from './alerts.js';
 import { evaluateAlertConditions, type IndexedEvent } from './alertProcessor.js';
+import { processEvent as processActionEvent, processBlock as processActionBlock } from './actionProcessor.js';
+import { recordTransaction } from './metricsService.js';
 
 // Configuration
 const POLLING_INTERVAL_MS = 5000; // 5 seconds
 const LAST_PROCESSED_KEY_PREFIX = 'indexer:lastProcessedVersion:';
+const LAST_PROCESSED_BLOCK_KEY_PREFIX = 'indexer:lastProcessedBlock:';
 const MAX_TRANSACTIONS_PER_POLL = 100;
 
 /**
@@ -88,7 +91,9 @@ export class EventIndexer {
       });
 
       if (transactions.length === 0) {
-        return; // No new transactions
+        // No new transactions, but still process block triggers
+        await this.processBlockTriggers(client);
+        return;
       }
 
       // Get all active alerts for this network
@@ -105,8 +110,41 @@ export class EventIndexer {
       for (const tx of transactions) {
         const events = this.extractEvents(tx);
 
+        // Record transaction metrics
+        const txEvent = events.find((e) => e.type === '_transaction');
+        if (txEvent && txEvent.moduleAddress) {
+          try {
+            await recordTransaction(
+              txEvent.moduleAddress,
+              txEvent.success,
+              txEvent.gasUsed,
+              this.network
+            );
+          } catch (metricsError) {
+            // Don't fail indexer for metrics errors
+            console.error('Error recording metrics:', metricsError);
+          }
+        }
+
         for (const event of events) {
+          // Process alerts
           await evaluateAlertConditions(event, alerts);
+
+          // Process Web3 Actions (event triggers)
+          // Skip synthetic _transaction events for actions
+          if (event.type !== '_transaction') {
+            try {
+              await processActionEvent(
+                this.network,
+                event.type,
+                event.data,
+                event.transactionHash
+              );
+            } catch (actionError) {
+              console.error('Error processing action event:', actionError);
+              // Don't fail the entire indexer if action processing fails
+            }
+          }
         }
       }
 
@@ -117,9 +155,76 @@ export class EventIndexer {
       console.log(
         `Processed ${transactions.length} transactions, version ${lastVersion} -> ${maxVersion}`
       );
+
+      // Process block triggers
+      await this.processBlockTriggers(client);
     } catch (error) {
       // Log error but don't crash - we'll retry on next poll
       console.error('Error fetching transactions:', error);
+    }
+  }
+
+  /**
+   * Process block-triggered actions
+   * Checks for new blocks and fires block triggers
+   */
+  private async processBlockTriggers(client: ReturnType<typeof getMovementClient>): Promise<void> {
+    const lastBlockKey = `${LAST_PROCESSED_BLOCK_KEY_PREFIX}${this.network}`;
+
+    try {
+      // Get current ledger info to find latest block height
+      const ledgerInfo = await client.getLedgerInfo();
+      const currentBlockHeight = parseInt(ledgerInfo.block_height, 10);
+
+      // Get last processed block height
+      const lastBlockStr = await redis.get(lastBlockKey);
+      const lastProcessedBlock = lastBlockStr ? parseInt(lastBlockStr, 10) : currentBlockHeight - 1;
+
+      // Process any new blocks
+      if (currentBlockHeight > lastProcessedBlock) {
+        const blocksToProcess = Math.min(
+          currentBlockHeight - lastProcessedBlock,
+          10 // Cap at 10 blocks per poll to avoid overwhelming
+        );
+
+        for (let i = 0; i < blocksToProcess; i++) {
+          const blockHeight = lastProcessedBlock + 1 + i;
+
+          try {
+            // Get block info for timestamp
+            const block = await client.getBlockByHeight({
+              blockHeight,
+              options: { withTransactions: false },
+            });
+
+            const blockTime = new Date(parseInt(block.block_timestamp, 10) / 1000).toISOString();
+            const blockHash = block.block_hash;
+
+            // Process block triggers for actions
+            const executionIds = await processActionBlock(
+              this.network,
+              blockHeight,
+              blockTime,
+              blockHash
+            );
+
+            if (executionIds.length > 0) {
+              console.log(
+                `[Indexer] Block ${blockHeight}: triggered ${executionIds.length} action(s)`
+              );
+            }
+          } catch (blockError) {
+            console.error(`[Indexer] Error processing block ${blockHeight}:`, blockError);
+            // Continue with next block
+          }
+        }
+
+        // Update last processed block
+        await redis.set(lastBlockKey, (lastProcessedBlock + blocksToProcess).toString());
+      }
+    } catch (error) {
+      // Don't fail the entire poll for block processing errors
+      console.error('[Indexer] Error processing block triggers:', error);
     }
   }
 
@@ -227,8 +332,8 @@ export function getIndexer(
  * Start all indexers
  */
 export async function startAllIndexers(): Promise<void> {
-  const networks: Array<'mainnet' | 'testnet' | 'devnet'> = ['testnet'];
-  // Add 'mainnet' when ready for production
+  const networks: Array<'mainnet' | 'testnet' | 'devnet'> = ['mainnet', 'testnet'];
+  // Both mainnet and testnet enabled for hackathon demo
 
   for (const network of networks) {
     const indexer = getIndexer(network);

@@ -54,8 +54,8 @@ export default function AlertsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Alerts</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-2xl font-bold text-dark-100">Alerts</h1>
+          <p className="text-sm text-dark-400 mt-1">
             Monitor on-chain activity and get notified when conditions are met
           </p>
         </div>

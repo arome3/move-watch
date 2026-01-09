@@ -3,10 +3,10 @@ import Link from 'next/link';
 export default function NotFound() {
   return (
     <div className="max-w-lg mx-auto px-4 py-16 text-center">
-      <div className="bg-slate-800 rounded-xl border border-slate-700 p-8">
+      <div className="bg-dark-800 rounded-xl border border-dark-700 p-8">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-16 w-16 mx-auto text-slate-600 mb-6"
+          className="h-16 w-16 mx-auto text-dark-600 mb-6"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -18,8 +18,8 @@ export default function NotFound() {
             d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <h1 className="text-xl font-bold text-slate-200 mb-2">Simulation Not Found</h1>
-        <p className="text-slate-400 mb-6">
+        <h1 className="text-xl font-bold text-dark-200 mb-2">Simulation Not Found</h1>
+        <p className="text-dark-400 mb-6">
           This simulation may have expired or the link is invalid. Simulation results are
           available for 30 days after creation.
         </p>

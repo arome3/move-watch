@@ -65,12 +65,12 @@ export function AddContractModal({ isOpen, onClose }: AddContractModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative bg-slate-800 rounded-lg border border-slate-700 w-full max-w-md mx-4 p-6">
+      <div className="relative bg-dark-800 rounded-lg border border-dark-700 w-full max-w-md mx-4 p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-white">Add Contract</h3>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-white"
+            className="text-dark-400 hover:text-white"
           >
             <svg
               className="w-5 h-5"
@@ -90,7 +90,7 @@ export function AddContractModal({ isOpen, onClose }: AddContractModalProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-dark-300 mb-1">
               Module Address <span className="text-red-400">*</span>
             </label>
             <input
@@ -98,16 +98,16 @@ export function AddContractModal({ isOpen, onClose }: AddContractModalProps) {
               value={moduleAddress}
               onChange={(e) => setModuleAddress(e.target.value)}
               placeholder="0x1::coin"
-              className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 bg-dark-900 border border-dark-700 rounded-lg text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
               required
             />
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-dark-500 mt-1">
               Format: 0x...::module_name
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-dark-300 mb-1">
               Display Name (optional)
             </label>
             <input
@@ -115,18 +115,18 @@ export function AddContractModal({ isOpen, onClose }: AddContractModalProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="My Token"
-              className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 bg-dark-900 border border-dark-700 rounded-lg text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">
+            <label className="block text-sm font-medium text-dark-300 mb-1">
               Network
             </label>
             <select
               value={network}
               onChange={(e) => setNetwork(e.target.value as Network)}
-              className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 bg-dark-900 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="testnet">Testnet (Bardock)</option>
               <option value="mainnet">Mainnet</option>
@@ -144,7 +144,7 @@ export function AddContractModal({ isOpen, onClose }: AddContractModalProps) {
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+              className="px-4 py-2 text-sm font-medium text-dark-300 hover:text-white transition-colors"
             >
               Cancel
             </button>

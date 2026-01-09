@@ -8,6 +8,7 @@ import type {
   SlackChannelConfig,
   TelegramChannelConfig,
   WebhookChannelConfig,
+  EmailChannelConfig,
 } from '@movewatch/shared';
 
 interface ChannelConfigProps {
@@ -20,6 +21,7 @@ const CHANNEL_TYPES: { value: ChannelType; label: string; icon: string }[] = [
   { value: 'slack', label: 'Slack', icon: '📱' },
   { value: 'telegram', label: 'Telegram', icon: '✈️' },
   { value: 'webhook', label: 'Custom Webhook', icon: '🔗' },
+  { value: 'email', label: 'Email', icon: '📧' },
 ];
 
 export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
@@ -69,6 +71,14 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
           }
         }
         break;
+
+      case 'email':
+        if (!config.email) {
+          newErrors.email = 'Email address is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(config.email)) {
+          newErrors.email = 'Invalid email address';
+        }
+        break;
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -111,6 +121,12 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
           } as WebhookChannelConfig,
         };
         break;
+      case 'email':
+        channelConfig = {
+          type: 'email',
+          config: { email: config.email } as EmailChannelConfig,
+        };
+        break;
       default:
         return;
     }
@@ -126,7 +142,7 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
       case 'discord':
         return (
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-dark-300 mb-2">
               Webhook URL
             </label>
             <input
@@ -134,10 +150,10 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
               value={config.webhookUrl || ''}
               onChange={(e) => setConfig({ ...config, webhookUrl: e.target.value })}
               placeholder="https://discord.com/api/webhooks/..."
-              className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm
-                         text-slate-100 placeholder:text-slate-600
+              className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm
+                         text-dark-100 placeholder:text-dark-600
                          focus:outline-none focus:ring-2 focus:ring-primary-500
-                         ${errors.webhookUrl ? 'border-red-500' : 'border-slate-700'}`}
+                         ${errors.webhookUrl ? 'border-red-500' : 'border-dark-700'}`}
             />
             {errors.webhookUrl && (
               <p className="mt-1 text-xs text-red-400">{errors.webhookUrl}</p>
@@ -148,7 +164,7 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
       case 'slack':
         return (
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-dark-300 mb-2">
               Webhook URL
             </label>
             <input
@@ -156,10 +172,10 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
               value={config.webhookUrl || ''}
               onChange={(e) => setConfig({ ...config, webhookUrl: e.target.value })}
               placeholder="https://hooks.slack.com/services/..."
-              className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm
-                         text-slate-100 placeholder:text-slate-600
+              className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm
+                         text-dark-100 placeholder:text-dark-600
                          focus:outline-none focus:ring-2 focus:ring-primary-500
-                         ${errors.webhookUrl ? 'border-red-500' : 'border-slate-700'}`}
+                         ${errors.webhookUrl ? 'border-red-500' : 'border-dark-700'}`}
             />
             {errors.webhookUrl && (
               <p className="mt-1 text-xs text-red-400">{errors.webhookUrl}</p>
@@ -171,7 +187,7 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
         return (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-dark-300 mb-2">
                 Bot Token
               </label>
               <input
@@ -179,17 +195,17 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
                 value={config.botToken || ''}
                 onChange={(e) => setConfig({ ...config, botToken: e.target.value })}
                 placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
-                className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm
-                           text-slate-100 placeholder:text-slate-600
+                className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm
+                           text-dark-100 placeholder:text-dark-600
                            focus:outline-none focus:ring-2 focus:ring-primary-500
-                           ${errors.botToken ? 'border-red-500' : 'border-slate-700'}`}
+                           ${errors.botToken ? 'border-red-500' : 'border-dark-700'}`}
               />
               {errors.botToken && (
                 <p className="mt-1 text-xs text-red-400">{errors.botToken}</p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-dark-300 mb-2">
                 Chat ID
               </label>
               <input
@@ -197,10 +213,10 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
                 value={config.chatId || ''}
                 onChange={(e) => setConfig({ ...config, chatId: e.target.value })}
                 placeholder="-1001234567890"
-                className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm
-                           text-slate-100 placeholder:text-slate-600
+                className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm
+                           text-dark-100 placeholder:text-dark-600
                            focus:outline-none focus:ring-2 focus:ring-primary-500
-                           ${errors.chatId ? 'border-red-500' : 'border-slate-700'}`}
+                           ${errors.chatId ? 'border-red-500' : 'border-dark-700'}`}
               />
               {errors.chatId && (
                 <p className="mt-1 text-xs text-red-400">{errors.chatId}</p>
@@ -213,7 +229,7 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
         return (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-dark-300 mb-2">
                 Webhook URL
               </label>
               <input
@@ -221,10 +237,10 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
                 value={config.url || ''}
                 onChange={(e) => setConfig({ ...config, url: e.target.value })}
                 placeholder="https://your-server.com/webhook"
-                className={`w-full bg-slate-900 border rounded-lg px-3 py-2 text-sm
-                           text-slate-100 placeholder:text-slate-600
+                className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm
+                           text-dark-100 placeholder:text-dark-600
                            focus:outline-none focus:ring-2 focus:ring-primary-500
-                           ${errors.url ? 'border-red-500' : 'border-slate-700'}`}
+                           ${errors.url ? 'border-red-500' : 'border-dark-700'}`}
               />
               {errors.url && (
                 <p className="mt-1 text-xs text-red-400">{errors.url}</p>
@@ -232,34 +248,59 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Auth Header <span className="text-slate-500">(optional)</span>
+                <label className="block text-sm font-medium text-dark-300 mb-2">
+                  Auth Header <span className="text-dark-500">(optional)</span>
                 </label>
                 <input
                   type="text"
                   value={config.authHeader || ''}
                   onChange={(e) => setConfig({ ...config, authHeader: e.target.value })}
                   placeholder="Authorization"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm
-                            text-slate-100 placeholder:text-slate-600
+                  className="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-sm
+                            text-dark-100 placeholder:text-dark-600
                             focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Auth Value <span className="text-slate-500">(optional)</span>
+                <label className="block text-sm font-medium text-dark-300 mb-2">
+                  Auth Value <span className="text-dark-500">(optional)</span>
                 </label>
                 <input
                   type="password"
                   value={config.authValue || ''}
                   onChange={(e) => setConfig({ ...config, authValue: e.target.value })}
                   placeholder="Bearer token..."
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm
-                            text-slate-100 placeholder:text-slate-600
+                  className="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-sm
+                            text-dark-100 placeholder:text-dark-600
                             focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
+          </div>
+        );
+
+      case 'email':
+        return (
+          <div>
+            <label className="block text-sm font-medium text-dark-300 mb-2">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={config.email || ''}
+              onChange={(e) => setConfig({ ...config, email: e.target.value })}
+              placeholder="alerts@example.com"
+              className={`w-full bg-dark-900 border rounded-lg px-3 py-2 text-sm
+                         text-dark-100 placeholder:text-dark-600
+                         focus:outline-none focus:ring-2 focus:ring-primary-500
+                         ${errors.email ? 'border-red-500' : 'border-dark-700'}`}
+            />
+            {errors.email && (
+              <p className="mt-1 text-xs text-red-400">{errors.email}</p>
+            )}
+            <p className="mt-1 text-xs text-dark-500">
+              Alert notifications will be sent to this email address
+            </p>
           </div>
         );
 
@@ -270,7 +311,7 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
 
   if (availableTypes.length === 0) {
     return (
-      <p className="text-sm text-slate-500 text-center py-4">
+      <p className="text-sm text-dark-500 text-center py-4">
         All channel types have been configured.
       </p>
     );
@@ -279,7 +320,7 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-2">
+        <label className="block text-sm font-medium text-dark-300 mb-2">
           Channel Type
         </label>
         <select
@@ -289,8 +330,8 @@ export function ChannelConfig({ onAdd, existingTypes }: ChannelConfigProps) {
             setConfig({});
             setErrors({});
           }}
-          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm
-                     text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full bg-dark-900 border border-dark-700 rounded-lg px-3 py-2 text-sm
+                     text-dark-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="">Select a channel type...</option>
           {availableTypes.map((type) => (

@@ -56,13 +56,13 @@ export function RefreshButton({
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-xs text-slate-500">
+      <span className="text-xs text-dark-500">
         Refreshes in {formatTime(secondsUntilRefresh)}
       </span>
       <button
         onClick={handleRefresh}
         disabled={isRefreshing}
-        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-300 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50"
+        className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-dark-300 bg-dark-800 border border-dark-700 rounded-lg hover:bg-dark-700 hover:text-white transition-colors disabled:opacity-50"
       >
         <svg
           className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}

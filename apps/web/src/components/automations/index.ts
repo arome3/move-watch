@@ -1,0 +1,1 @@
+export { AutomationsTabs } from './AutomationsTabs';

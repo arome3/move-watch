@@ -1,3 +1,4 @@
+import { getSession } from 'next-auth/react';
 import type {
   CreateAlertRequest,
   UpdateAlertRequest,
@@ -6,17 +7,37 @@ import type {
   TestNotificationResult,
   ApiError,
 } from '@movewatch/shared';
+import { x402Fetch } from './x402Client';
+import { usePaymentStore } from '@/stores/payment';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+/**
+ * Get authentication headers for API requests
+ * Uses the JWT accessToken from NextAuth session
+ */
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const session = await getSession();
+
+  if (session?.accessToken) {
+    return {
+      Authorization: `Bearer ${session.accessToken}`,
+    };
+  }
+
+  return {};
+}
 
 /**
  * Fetch all alerts for the current user
  */
 export async function fetchAlerts(): Promise<AlertResponse[]> {
+  const authHeaders = await getAuthHeaders();
   const response = await fetch(`${API_URL}/v1/alerts`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
     },
   });
 
@@ -34,10 +55,12 @@ export async function fetchAlerts(): Promise<AlertResponse[]> {
  * Get a single alert by ID
  */
 export async function getAlert(id: string): Promise<AlertResponse | null> {
+  const authHeaders = await getAuthHeaders();
   const response = await fetch(`${API_URL}/v1/alerts/${id}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
     },
   });
 
@@ -57,26 +80,31 @@ export async function getAlert(id: string): Promise<AlertResponse | null> {
 
 /**
  * Create a new alert
+ *
+ * Uses x402 protocol - triggers payment modal if free quota exceeded.
+ * Pricing: 0.005 MOVE per alert (3 free/month)
  */
 export async function createAlert(
   request: CreateAlertRequest
 ): Promise<AlertResponse> {
-  const response = await fetch(`${API_URL}/v1/alerts`, {
+  const { openPaymentModal } = usePaymentStore.getState();
+  const authHeaders = await getAuthHeaders();
+
+  const result = await x402Fetch<AlertResponse>('/v1/alerts', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: authHeaders,
     body: JSON.stringify(request),
+    onPaymentRequired: async (details) => {
+      // Trigger payment modal and wait for user to complete or cancel
+      return openPaymentModal(details);
+    },
   });
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    const error = data.error as ApiError;
-    throw new Error(error.message || 'Failed to create alert');
+  if (result.error) {
+    throw new Error(result.error.message || 'Failed to create alert');
   }
 
-  return data as AlertResponse;
+  return result.data!;
 }
 
 /**
@@ -86,10 +114,12 @@ export async function updateAlert(
   id: string,
   updates: UpdateAlertRequest
 ): Promise<AlertResponse> {
+  const authHeaders = await getAuthHeaders();
   const response = await fetch(`${API_URL}/v1/alerts/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
     },
     body: JSON.stringify(updates),
   });
@@ -108,10 +138,12 @@ export async function updateAlert(
  * Delete an alert
  */
 export async function deleteAlert(id: string): Promise<void> {
+  const authHeaders = await getAuthHeaders();
   const response = await fetch(`${API_URL}/v1/alerts/${id}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
     },
   });
 
@@ -136,10 +168,12 @@ export async function toggleAlert(
  * Test alert notifications
  */
 export async function testAlert(id: string): Promise<TestNotificationResult[]> {
+  const authHeaders = await getAuthHeaders();
   const response = await fetch(`${API_URL}/v1/alerts/${id}/test`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
     },
   });
 
@@ -166,10 +200,12 @@ export async function getAlertTriggers(
     offset: offset.toString(),
   });
 
+  const authHeaders = await getAuthHeaders();
   const response = await fetch(`${API_URL}/v1/alerts/${id}/triggers?${params}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
     },
   });
 

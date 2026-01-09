@@ -18,13 +18,15 @@ const CHANNEL_INFO: Record<ChannelType, { label: string; icon: string }> = {
   slack: { label: 'Slack', icon: '📱' },
   telegram: { label: 'Telegram', icon: '✈️' },
   webhook: { label: 'Webhook', icon: '🔗' },
+  email: { label: 'Email', icon: '📧' },
+  action: { label: 'Action', icon: '⚡' },
 };
 
 export function ChannelStatus({ channels }: ChannelStatusProps) {
   if (channels.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-sm text-slate-500">No notification channels configured</p>
+        <p className="text-sm text-dark-500">No notification channels configured</p>
       </div>
     );
   }
@@ -37,7 +39,7 @@ export function ChannelStatus({ channels }: ChannelStatusProps) {
           ? 'text-yellow-400'
           : channel.enabled
             ? 'text-green-400'
-            : 'text-slate-500';
+            : 'text-dark-500';
         const statusText = !channel.configured
           ? 'Not configured'
           : channel.enabled
@@ -47,11 +49,11 @@ export function ChannelStatus({ channels }: ChannelStatusProps) {
         return (
           <div
             key={channel.id}
-            className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700"
+            className="flex items-center justify-between p-3 bg-dark-800/50 rounded-lg border border-dark-700"
           >
             <div className="flex items-center gap-3">
               <span className="text-lg">{info.icon}</span>
-              <span className="text-sm font-medium text-slate-200">{info.label}</span>
+              <span className="text-sm font-medium text-dark-200">{info.label}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${
@@ -59,7 +61,7 @@ export function ChannelStatus({ channels }: ChannelStatusProps) {
                   ? 'bg-yellow-400'
                   : channel.enabled
                     ? 'bg-green-400'
-                    : 'bg-slate-500'
+                    : 'bg-dark-500'
               }`} />
               <span className={`text-xs ${statusColor}`}>{statusText}</span>
             </div>

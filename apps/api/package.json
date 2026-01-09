@@ -3,14 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "NODE_OPTIONS='--no-node-snapshot' tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node --no-node-snapshot dist/index.js",
     "clean": "rm -rf dist",
-    "indexer": "tsx src/workers/indexer.ts",
-    "indexer:prod": "node dist/workers/indexer.js"
+    "indexer": "NODE_OPTIONS='--no-node-snapshot' tsx src/workers/indexer.ts",
+    "indexer:prod": "node --no-node-snapshot dist/workers/indexer.js",
+    "action-worker": "NODE_OPTIONS='--no-node-snapshot' tsx src/workers/actionWorker.ts",
+    "action-worker:prod": "node --no-node-snapshot dist/workers/actionWorker.js",
+    "block-indexer": "NODE_OPTIONS='--no-node-snapshot' tsx src/workers/blockIndexer.ts",
+    "block-indexer:prod": "node --no-node-snapshot dist/workers/blockIndexer.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "@aptos-labs/ts-sdk": "^1.26.0",
     "@movewatch/database": "workspace:*",
     "@movewatch/shared": "workspace:*",
@@ -19,8 +24,11 @@
     "express": "^4.18.2",
     "helmet": "^7.1.0",
     "ioredis": "^5.3.2",
+    "isolated-vm": "^6.0.2",
+    "jose": "^5.2.0",
     "morgan": "^1.10.0",
     "nanoid": "^5.0.4",
+    "node-cron": "^3.0.3",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -28,6 +36,7 @@
     "@types/express": "^4.17.21",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.10.0",
+    "@types/node-cron": "^3.0.11",
     "tsx": "^4.6.2",
     "typescript": "^5.3.0"
   }

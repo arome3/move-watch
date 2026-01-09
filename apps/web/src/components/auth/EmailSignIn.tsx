@@ -58,10 +58,10 @@ export function EmailSignIn({ callbackUrl = '/dashboard' }: EmailSignInProps) {
         </div>
         <div>
           <h3 className="text-lg font-medium text-white">Check your email</h3>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-dark-400">
             We sent a magic link to <span className="text-white">{email}</span>
           </p>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-dark-500">
             Click the link in the email to sign in
           </p>
         </div>
@@ -91,14 +91,14 @@ export function EmailSignIn({ callbackUrl = '/dashboard' }: EmailSignInProps) {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
           required
-          className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white placeholder-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         />
       </div>
 
       <button
         type="submit"
         disabled={isLoading || !email}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 text-white font-medium rounded-lg hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-dark-700 text-white font-medium rounded-lg hover:bg-dark-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isLoading ? (
           <>
@@ -119,7 +119,7 @@ export function EmailSignIn({ callbackUrl = '/dashboard' }: EmailSignInProps) {
         </div>
       )}
 
-      <p className="text-xs text-slate-500 text-center">
+      <p className="text-xs text-dark-500 text-center">
         We&apos;ll send you a magic link to sign in instantly
       </p>
     </form>

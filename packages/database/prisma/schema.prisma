@@ -29,6 +29,44 @@ enum AlertConditionType {
   BALANCE_THRESHOLD
   EVENT_EMITTED
   GAS_SPIKE
+  FUNCTION_CALL
+  TOKEN_TRANSFER
+  LARGE_TRANSACTION
+}
+
+// ============================================================================
+// GUARDIAN RISK ANALYZER ENUMS
+// ============================================================================
+
+// Risk severity levels
+enum RiskSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// Risk categories for Guardian analysis
+enum RiskCategory {
+  EXPLOIT         // Reentrancy, flash loan, oracle manipulation
+  RUG_PULL        // LP removal, ownership transfer, blacklist
+  EXCESSIVE_COST  // Gas spikes, high slippage, MEV
+  PERMISSION      // Admin functions, pause triggers, upgrades
+}
+
+// Guardian simulation status
+enum GuardianSimulationStatus {
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+// Guardian LLM analysis status
+enum GuardianLlmStatus {
+  USED
+  SKIPPED
+  RATE_LIMITED
+  ERROR
 }
 
 // Notification channel types
@@ -37,6 +75,7 @@ enum ChannelType {
   SLACK
   TELEGRAM
   WEBHOOK
+  EMAIL
 }
 
 // Threshold comparison operators
@@ -63,9 +102,15 @@ model User {
   sessions      Session[]
 
   // Application relations
-  simulations      Simulation[]
-  alerts           Alert[]
-  watchedContracts WatchedContract[]
+  simulations            Simulation[]
+  alerts                 Alert[]
+  channels               NotificationChannel[]
+  watchedContracts       WatchedContract[]
+  actions                Action[]
+  payments               Payment[]
+  apiKeys                ApiKey[]
+  notificationPreference NotificationPreference?
+  guardianChecks         GuardianCheck[]
 
   createdAt     DateTime     @default(now()) @map("created_at")
   updatedAt     DateTime     @updatedAt @map("updated_at")
@@ -104,6 +149,9 @@ model Simulation {
   createdAt     DateTime  @default(now()) @map("created_at")
   expiresAt     DateTime  @map("expires_at")
 
+  // Relation to Guardian checks that used this simulation
+  guardianChecks GuardianCheck[]
+
   @@index([userId])
   @@index([shareId])
   @@index([createdAt])
@@ -125,8 +173,8 @@ model Alert {
   conditionType   AlertConditionType @map("condition_type")
   conditionConfig Json               @map("condition_config")  // Type-specific config
 
-  // Notification settings
-  channels        NotificationChannel[]
+  // Notification settings (many-to-many via AlertChannel)
+  alertChannels   AlertChannel[]
   cooldownSeconds Int                @default(60) @map("cooldown_seconds")
 
   // Statistics
@@ -142,24 +190,49 @@ model Alert {
   @@index([userId])
   @@index([conditionType])
   @@index([enabled])
+  @@index([network, enabled])  // Composite for indexer query: enabled alerts by network
+  @@index([userId, enabled])   // Composite for user's active alerts
   @@map("alerts")
 }
 
-// Notification channel configuration for alerts
+// Notification channel - standalone, reusable across alerts
 model NotificationChannel {
-  id          String      @id @default(cuid())
-  alertId     String      @map("alert_id")
-  alert       Alert       @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  id          String         @id @default(cuid())
+  userId      String         @map("user_id")
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  name        String         // User-friendly name (e.g., "My Discord Server", "Team Slack")
   type        ChannelType
-  config      Json        // Channel-specific configuration (webhookUrl, botToken, etc.)
-  enabled     Boolean     @default(true)
+  config      Json           // Channel-specific configuration (webhookUrl, botToken, etc.)
 
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
+  // Many-to-many with alerts
+  alertChannels AlertChannel[]
 
-  @@index([alertId])
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([userId, type])  // Composite for filtering user's channels by type
   @@map("notification_channels")
+}
+
+// Junction table for Alert <-> NotificationChannel many-to-many
+model AlertChannel {
+  id          String              @id @default(cuid())
+  alertId     String              @map("alert_id")
+  channelId   String              @map("channel_id")
+
+  alert       Alert               @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  channel     NotificationChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  enabled     Boolean             @default(true)  // Can disable per-alert without removing
+
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  @@unique([alertId, channelId])
+  @@index([alertId])
+  @@index([channelId])
+  @@map("alert_channels")
 }
 
 // Alert trigger history for tracking when alerts fired
@@ -180,6 +253,7 @@ model AlertTrigger {
 
   @@index([alertId])
   @@index([triggeredAt])
+  @@index([transactionHash])  // For looking up triggers by transaction
   @@map("alert_triggers")
 }
 
@@ -203,6 +277,353 @@ model WatchedContract {
   @@unique([userId, moduleAddress, network])
   @@index([userId])
   @@map("watched_contracts")
+}
+
+// ============================================================================
+// WEB3 ACTIONS MODELS
+// ============================================================================
+
+// Action trigger types
+enum ActionTriggerType {
+  EVENT     // Triggered by on-chain events
+  BLOCK     // Triggered on new blocks
+  SCHEDULE  // Triggered by cron schedule
+  WEBHOOK   // Triggered by external HTTP request
+}
+
+// Action execution status
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  TIMEOUT
+}
+
+// Action model - user-defined automated scripts
+model Action {
+  id              String            @id @default(cuid())
+  userId          String            @map("user_id")
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name            String
+  description     String?
+  enabled         Boolean           @default(false)
+  network         Network           @default(TESTNET)
+
+  // Code and configuration
+  code            String            @db.Text  // TypeScript source code
+  triggerType     ActionTriggerType @map("trigger_type")
+  triggerConfig   Json              @map("trigger_config")  // Type-specific trigger config
+
+  // Execution limits
+  maxExecutionMs  Int               @default(30000) @map("max_execution_ms")   // Max 30s
+  memoryLimitMb   Int               @default(128) @map("memory_limit_mb")      // Max 128MB
+
+  // Rate limiting
+  cooldownSeconds Int               @default(60) @map("cooldown_seconds")
+  lastExecutedAt  DateTime?         @map("last_executed_at")
+
+  // Statistics
+  executionCount  Int               @default(0) @map("execution_count")
+  successCount    Int               @default(0) @map("success_count")
+  failureCount    Int               @default(0) @map("failure_count")
+
+  // Relations
+  secrets         ActionSecret[]
+  executions      ActionExecution[]
+
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([triggerType, enabled])
+  @@index([network, enabled])
+  @@map("actions")
+}
+
+// ActionSecret - encrypted secrets for action execution
+model ActionSecret {
+  id              String   @id @default(cuid())
+  actionId        String   @map("action_id")
+  action          Action   @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  name            String   // Secret key name (e.g., "API_KEY")
+  encryptedValue  String   @map("encrypted_value") @db.Text  // AES-256 encrypted
+  iv              String   // Initialization vector for decryption
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([actionId, name])
+  @@index([actionId])
+  @@map("action_secrets")
+}
+
+// ActionExecution - execution history and logs
+model ActionExecution {
+  id              String          @id @default(cuid())
+  actionId        String          @map("action_id")
+  action          Action          @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  status          ExecutionStatus @default(PENDING)
+
+  // Trigger context
+  triggerData     Json?           @map("trigger_data")       // Event/block data that triggered
+  transactionHash String?         @map("transaction_hash")
+
+  // Execution results
+  result          Json?                                      // Return value from action
+  logs            String[]        @default([])               // console.log captures
+  error           Json?                                      // Error details if failed
+
+  // Metrics
+  durationMs      Int?            @map("duration_ms")
+  memoryUsedMb    Float?          @map("memory_used_mb")
+
+  startedAt       DateTime?       @map("started_at")
+  completedAt     DateTime?       @map("completed_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  @@index([actionId])
+  @@index([actionId, createdAt])
+  @@index([status])
+  @@index([status, createdAt])  // For querying pending/running jobs
+  @@map("action_executions")
+}
+
+// ============================================================================
+// X402 PAYMENT MODELS
+// ============================================================================
+
+// Payment status for x402 transactions
+enum PaymentStatus {
+  PENDING    // Payment submitted, awaiting confirmation
+  CONFIRMED  // Transaction confirmed on-chain
+  FAILED     // Transaction failed or rejected
+  EXPIRED    // Payment request expired
+}
+
+// Payment tracking model - records all x402 payments
+model Payment {
+  id                String        @id @default(cuid())
+
+  // User reference (nullable for anonymous/agent payments)
+  userId            String?       @map("user_id")
+  user              User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Payment details
+  payerAddress      String        @map("payer_address")     // Wallet that paid
+  amount            String                                   // Amount in octas (smallest unit)
+  amountFormatted   String        @map("amount_formatted")  // Human-readable MOVE
+
+  // Transaction details
+  transactionHash   String?       @unique @map("transaction_hash")
+  network           Network       @default(TESTNET)
+  status            PaymentStatus @default(PENDING)
+
+  // Request context
+  endpoint          String                                   // API endpoint charged
+  requestId         String        @unique @map("request_id") // Unique request identifier
+
+  // Pricing at time of request
+  priceOctas        String        @map("price_octas")       // Price in octas
+  priceUsd          Float?        @map("price_usd")         // USD equivalent (optional)
+
+  // Verification
+  signaturePayload  String?       @map("signature_payload") @db.Text  // The signed transaction payload
+  verifiedAt        DateTime?     @map("verified_at")
+  confirmedAt       DateTime?     @map("confirmed_at")
+
+  // Error tracking
+  errorMessage      String?       @map("error_message")
+
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([payerAddress])
+  @@index([status])
+  @@index([endpoint])
+  @@index([createdAt])
+  @@map("payments")
+}
+
+// Usage quota tracking for free tier enforcement
+model UsageQuota {
+  id                String   @id @default(cuid())
+
+  // Identifier (either userId or wallet address for anonymous)
+  userId            String?  @unique @map("user_id")
+  walletAddress     String?  @unique @map("wallet_address")
+
+  // Usage counters (reset daily/monthly)
+  simulationsToday  Int      @default(0) @map("simulations_today")
+  guardianChecks    Int      @default(0) @map("guardian_checks")
+  alertsCreated     Int      @default(0) @map("alerts_created")
+  actionsExecuted   Int      @default(0) @map("actions_executed")
+  monitoringCalls   Int      @default(0) @map("monitoring_calls")
+
+  // Reset tracking
+  lastResetDate     DateTime @default(now()) @map("last_reset_date")
+
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("usage_quotas")
+}
+
+// Pricing configuration for endpoints (admin-managed)
+model PricingConfig {
+  id              String   @id @default(cuid())
+  endpoint        String   @unique              // e.g., "POST /v1/simulate"
+
+  // Pricing in MOVE (stored as octas - 1 MOVE = 10^8 octas)
+  priceOctas      String   @map("price_octas")  // Price per request
+
+  // Free tier limits
+  freeLimit       Int      @default(0) @map("free_limit")    // Free requests per period
+  freeLimitPeriod String   @default("day") @map("free_limit_period") // "day" | "month"
+
+  // Description for 402 response
+  description     String?
+
+  // Active/inactive toggle
+  enabled         Boolean  @default(true)
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("pricing_configs")
+}
+
+// ============================================================================
+// USER SETTINGS MODELS
+// ============================================================================
+
+// API Key model for programmatic access
+model ApiKey {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name            String?                              // Optional friendly name
+  keyPrefix       String    @map("key_prefix")         // First chars for identification (e.g., "mw_live_abc123...")
+  keyHash         String    @unique @map("key_hash")   // SHA-256 hash of full key
+
+  // Usage tracking
+  lastUsedAt      DateTime? @map("last_used_at")
+  usageCount      Int       @default(0) @map("usage_count")
+
+  // Lifecycle
+  expiresAt       DateTime? @map("expires_at")
+  revokedAt       DateTime? @map("revoked_at")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([keyHash])
+  @@index([revokedAt])
+  @@map("api_keys")
+}
+
+// User notification preferences (default settings)
+model NotificationPreference {
+  id              String    @id @default(cuid())
+  userId          String    @unique @map("user_id")
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Default channel preferences
+  emailEnabled    Boolean   @default(true) @map("email_enabled")
+  emailAddress    String?   @map("email_address")     // Override for notifications
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("notification_preferences")
+}
+
+// ============================================================================
+// GUARDIAN RISK ANALYZER MODELS
+// ============================================================================
+
+// GuardianCheck - AI-powered transaction risk analysis results
+model GuardianCheck {
+  id              String        @id @default(cuid())
+  shareId         String        @unique @default(cuid()) @map("share_id")
+
+  // Owner (nullable for anonymous checks)
+  userId          String?       @map("user_id")
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Request parameters (same structure as Simulation)
+  network         Network
+  sender          String?
+  functionName    String        @map("function_name")
+  typeArguments   String[]      @map("type_arguments")
+  arguments       Json          @default("[]")
+
+  // Optional link to simulation (if simulation was run)
+  simulationId    String?       @map("simulation_id")
+  simulation      Simulation?   @relation(fields: [simulationId], references: [id], onDelete: SetNull)
+
+  // Risk analysis results
+  overallRisk     RiskSeverity  @map("overall_risk")
+  riskScore       Int           @map("risk_score")  // 0-100
+
+  // Analysis timing metrics
+  patternMatchMs  Int           @map("pattern_match_ms")
+  llmAnalysisMs   Int?          @map("llm_analysis_ms")
+  usedLlm         Boolean       @default(false) @map("used_llm")
+  llmModel        String?       @map("llm_model")
+
+  // Analysis integrity fields (new)
+  simulationStatus GuardianSimulationStatus @default(SKIPPED) @map("simulation_status")
+  simulationError  String?                   @map("simulation_error")
+  llmStatus        GuardianLlmStatus         @default(SKIPPED) @map("llm_status")
+  warnings         Json                      @default("[]")  // GuardianAnalysisWarning[]
+
+  // Raw analysis data for debugging
+  rawPatternResults Json?       @map("raw_pattern_results")
+  rawLlmResponse    String?     @map("raw_llm_response") @db.Text
+
+  // Related issues
+  issues          GuardianIssue[]
+
+  // Metadata
+  createdAt       DateTime      @default(now()) @map("created_at")
+  expiresAt       DateTime      @map("expires_at")
+
+  @@index([userId])
+  @@index([shareId])
+  @@index([overallRisk])
+  @@index([createdAt])
+  @@map("guardian_checks")
+}
+
+// GuardianIssue - Individual risk issues found in analysis
+model GuardianIssue {
+  id              String        @id @default(cuid())
+  checkId         String        @map("check_id")
+  check           GuardianCheck @relation(fields: [checkId], references: [id], onDelete: Cascade)
+
+  // Issue classification
+  category        RiskCategory
+  severity        RiskSeverity
+  title           String
+  description     String        @db.Text
+  recommendation  String        @db.Text
+
+  // Detection details
+  patternId       String?       @map("pattern_id")   // ID of pattern that matched
+  evidence        Json?                               // Supporting evidence (code, values)
+  confidence      Float         @default(1.0)        // 0.0-1.0 confidence score
+  source          String        @default("pattern")  // "pattern" | "llm"
+
+  @@index([checkId])
+  @@index([category])
+  @@index([severity])
+  @@map("guardian_issues")
 }
 
 // ============================================================================
@@ -238,6 +659,8 @@ model Session {
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])          // For session lookups by user
+  @@index([expires])         // For cleanup of expired sessions
   @@map("sessions")
 }
 
