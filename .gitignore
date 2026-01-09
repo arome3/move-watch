@@ -37,5 +37,8 @@ packages/database/generated/
 # Misc
 *.tsbuildinfo
 .vercel
-move-watch.md
 docs/
+
+# Documentation (except README)
+*.md
+!README.md
