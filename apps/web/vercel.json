@@ -4,9 +4,6 @@
   "buildCommand": "cd ../.. && pnpm install && pnpm build --filter=@movewatch/web",
   "installCommand": "pnpm install",
   "outputDirectory": ".next",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@api_url"
-  },
   "regions": ["iad1"],
   "headers": [
     {
