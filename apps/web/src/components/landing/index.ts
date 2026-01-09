@@ -7,6 +7,7 @@ export { AutomationShowcase } from './AutomationShowcase';
 export { SupportingFeatures } from './SupportingFeatures';
 export { HowItWorks } from './HowItWorks';
 export { Pricing } from './Pricing';
+export { CLIComingSoon } from './CLIComingSoon';
 export { CTASection } from './CTASection';
 export { Footer } from './Footer';
 

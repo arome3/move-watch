@@ -24,7 +24,6 @@ export function Header() {
   const landingNavItems = [
     { href: '#features', label: 'Features' },
     { href: '#how-it-works', label: 'How It Works' },
-    { href: 'https://docs.movementlabs.xyz', label: 'Docs', external: true },
   ];
 
   // Only show app nav items if user is signed in
@@ -44,7 +43,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             <Link
               href={session ? '/dashboard' : '/'}
-              className="text-xl font-bold text-primary-400 hover:text-primary-300 transition-colors"
+              className="text-xl font-display font-semibold text-primary-400 hover:text-primary-300 transition-colors tracking-tight"
             >
               MoveWatch
             </Link>

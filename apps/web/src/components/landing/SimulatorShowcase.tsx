@@ -186,7 +186,7 @@ export function SimulatorShowcase() {
   }, []);
 
   return (
-    <section id="simulator" ref={ref} className="relative py-32 overflow-hidden">
+    <section id="features" ref={ref} className="relative py-32 overflow-hidden">
       {/* UNIQUE BACKGROUND: Diagonal stripes instead of blur orbs */}
       <div className="absolute inset-0 -z-10">
         <div

@@ -7,6 +7,7 @@ import {
   SupportingFeatures,
   HowItWorks,
   Pricing,
+  CLIComingSoon,
   CTASection,
   Footer,
 } from '@/components/landing';
@@ -61,6 +62,7 @@ export default function LandingPage() {
       {/* Conversion Sections */}
       <HowItWorks />
       <Pricing />
+      <CLIComingSoon />
       <CTASection />
       <Footer />
     </>
