@@ -2,7 +2,8 @@
 const nextConfig = {
   transpilePackages: ['@movewatch/shared'],
   experimental: {
-    serverComponentsExternalPackages: [],
+    // Tell Next.js not to bundle Prisma - it needs native binaries
+    serverComponentsExternalPackages: ['@prisma/client', '@movewatch/database'],
   },
   eslint: {
     // Skip ESLint during builds (run separately via pnpm lint)

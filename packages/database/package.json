@@ -10,7 +10,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "build": "tsc",
-    "clean": "rm -rf dist generated"
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@prisma/client": "^5.7.0"
