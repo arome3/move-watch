@@ -1,5 +1,6 @@
 # Build stage
-FROM node:20-slim AS builder
+# Using Node 18 for isolated-vm compatibility (Node 20.19+ has V8 API changes)
+FROM node:18-slim AS builder
 
 # Install build dependencies for native modules (isolated-vm)
 RUN apt-get update && apt-get install -y \
@@ -38,7 +39,7 @@ RUN pnpm --filter @movewatch/shared build
 RUN pnpm --filter @movewatch/api build
 
 # Production stage
-FROM node:20-slim AS runner
+FROM node:18-slim AS runner
 
 # Install runtime dependencies for isolated-vm
 RUN apt-get update && apt-get install -y \
