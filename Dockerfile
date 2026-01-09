@@ -1,6 +1,7 @@
 # Build stage
-# Using Node 18 for isolated-vm compatibility (Node 20.19+ has V8 API changes)
-FROM node:18-slim AS builder
+# Pinning Node 18.18.0 for isolated-vm V8 compatibility
+# Recent Node patches (18.20+, 20.19+) have V8 SourceLocation API changes
+FROM node:18.18.0-slim AS builder
 
 # Install build dependencies for native modules (isolated-vm)
 RUN apt-get update && apt-get install -y \
@@ -15,7 +16,7 @@ RUN npm install -g pnpm@8.15.0
 WORKDIR /app
 
 # Copy workspace config files
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
 COPY pnpm-lock.yaml* ./
 
 # Copy package.json files for all packages
@@ -23,8 +24,8 @@ COPY apps/api/package.json ./apps/api/
 COPY packages/database/package.json ./packages/database/
 COPY packages/shared/package.json ./packages/shared/
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies (not using frozen-lockfile since isolated-vm version changed)
+RUN pnpm install
 
 # Copy source code
 COPY apps/api ./apps/api
@@ -39,7 +40,7 @@ RUN pnpm --filter @movewatch/shared build
 RUN pnpm --filter @movewatch/api build
 
 # Production stage
-FROM node:18-slim AS runner
+FROM node:18.18.0-slim AS runner
 
 # Install runtime dependencies for isolated-vm
 RUN apt-get update && apt-get install -y \

@@ -232,6 +232,7 @@ async function processAddressCheck(
         threshold: alert.condition.threshold,
         operator: alert.condition.operator,
       },
+      transactionHash: null,
       timestamp: new Date().toISOString(),
       link: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/alerts/${alert.id}`,
     };
