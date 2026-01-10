@@ -16,10 +16,6 @@ export function WalletProvider({ children }: WalletProviderProps) {
         network: Network.TESTNET,
         aptosConnect: undefined,
       }}
-      // Only allow standard wallets (Petra, Pontem, etc) - no SDK wallets
-      // SDK wallets like AptosConnectGoogleWallet try to fetch chain info on init
-      // which fails because we're using Movement Network, not Aptos
-      plugins={[]}
       onError={(error) => {
         // Silently handle wallet initialization errors
         // These are expected when using Movement Network instead of Aptos
