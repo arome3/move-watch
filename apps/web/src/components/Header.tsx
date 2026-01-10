@@ -18,6 +18,7 @@ export function Header() {
     { href: '/simulator', label: 'Simulator' },
     { href: '/guardian', label: 'Guardian' },
     { href: '/alerts-and-actions', label: 'Alerts & Actions' },
+    { href: '/agents', label: 'Agent API' },
   ];
 
   // Navigation items for landing page

@@ -127,6 +127,7 @@ export async function refreshSchedules(network: Network): Promise<void> {
   try {
     // Get all enabled schedule actions
     const actions = await getScheduleActions(network);
+    console.log(`[Scheduler] Found ${actions.length} schedule actions for ${network}:`, actions.map(a => ({ id: a.id, name: a.name, enabled: a.enabled })));
 
     // Track which actions are still active
     const activeActionIds = new Set<string>();

@@ -45,8 +45,8 @@ importers:
         specifier: ^7.1.0
         version: 7.2.0
       isolated-vm:
-        specifier: 4.7.2
-        version: 4.7.2
+        specifier: ^6.0.2
+        version: 6.0.2
       jose:
         specifier: ^5.2.0
         version: 5.10.0
@@ -4125,9 +4125,9 @@ packages:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
     dev: true
 
-  /isolated-vm@4.7.2:
-    resolution: {integrity: sha512-JVEs5gzWObzZK5+OlBplCdYSpokMcdhLSs/xWYYxmYWVfOOFF4oZJsYh7E/FmfX8e7gMioXMpMMeEyX1afuKrg==}
-    engines: {node: '>=16.0.0'}
+  /isolated-vm@6.0.2:
+    resolution: {integrity: sha512-Qw6AJuagG/VJuh2AIcSWmQPsAArti/L+lKhjXU+lyhYkbt3J57XZr+ZjgfTnOr4NJcY1r3f8f0eePS7MRGp+pg==}
+    engines: {node: '>=22.0.0'}
     requiresBuild: true
     dependencies:
       prebuild-install: 7.1.3

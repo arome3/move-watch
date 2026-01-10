@@ -59,7 +59,7 @@ export default function GuardianPage() {
           <div className="text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 text-sm mb-4">
               <span>AI-Powered Protection</span>
-              <span className="text-xs bg-orange-500/20 px-1.5 py-0.5 rounded">x402</span>
+              {/* <span className="text-xs bg-orange-500/20 px-1.5 py-0.5 rounded">x402</span> */}
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Guardian{' '}
@@ -136,7 +136,7 @@ export default function GuardianPage() {
           {/* Input section */}
           <div className="order-1 lg:order-2 space-y-6">
             {/* Input form */}
-            <div className="bg-dark-800 rounded-xl border border-dark-700 p-6">
+            <div className="bg-dark-800 rounded-xl border border-dark-700 p-6 relative z-10">
               <div className="flex items-center gap-2 mb-6">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

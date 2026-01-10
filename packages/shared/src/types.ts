@@ -17,6 +17,8 @@ export interface SimulationRequest {
     // Fork simulation options
     ledger_version?: string;        // Simulate at specific ledger version (historical state)
     state_overrides?: StateOverride[]; // Override account state for testing
+    // Detailed trace options
+    detailed_trace?: boolean;       // Use CLI for real per-instruction gas profiling
   };
 }
 

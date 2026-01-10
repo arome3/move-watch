@@ -58,7 +58,7 @@ export function BytecodeVerification({ verification }: BytecodeVerificationProps
               </div>
               <div className="bg-dark-700/50 rounded px-2 py-1.5">
                 <span className="text-dark-500 block">Friend Modules</span>
-                <span className="text-dark-200 font-medium">{verification.metadata.friendModules.length}</span>
+                <span className="text-dark-200 font-medium">{verification.metadata.friendModules?.length ?? 0}</span>
               </div>
             </div>
           )}

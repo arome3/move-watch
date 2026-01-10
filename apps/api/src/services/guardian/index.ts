@@ -365,3 +365,18 @@ export type {
   SemanticMatchResult,
   SemanticAnalysisInput,
 } from './semanticMatcher.js';
+
+// Framework whitelist (known-safe functions)
+export {
+  checkWhitelist,
+  createWhitelistedResponse,
+  isNeverWhitelisted,
+  FRAMEWORK_ADDRESSES,
+  SAFE_CORE_MODULES,
+  SAFE_FUNCTIONS,
+  NEVER_WHITELIST,
+} from './frameworkWhitelist.js';
+
+export type {
+  WhitelistCheckResult,
+} from './frameworkWhitelist.js';

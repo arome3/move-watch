@@ -47,6 +47,7 @@ export interface SessionSimulationRequest {
   arguments?: string[];
   maxGasAmount?: number;
   gasUnitPrice?: number;
+  privateKey?: string; // Private key for signing transactions in session
 }
 
 export interface SessionSimulationResult {
@@ -179,11 +180,11 @@ export async function createSession(config: SimulationSessionConfig): Promise<Si
 
   if (config.forkFromNetwork) {
     // Fork from the network's current state
+    // CLI 7.13.0 uses --network directly (mainnet, testnet, devnet)
     args.push('--network', config.network === 'mainnet' ? 'mainnet' : 'testnet');
-    args.push('--url', networkConfig.fullnode);
 
     if (config.ledgerVersion) {
-      args.push('--ledger-version', config.ledgerVersion);
+      args.push('--network-version', config.ledgerVersion);
     }
   }
   // If not forking, it creates a clean genesis state
@@ -330,6 +331,34 @@ export async function applyStateOverrides(
 }
 
 /**
+ * Format an argument for CLI (type:value format)
+ * CLI expects: address:0x1, u64:1000, bool:true, etc.
+ */
+function formatCLIArgument(value: string): string {
+  // Already formatted
+  if (value.includes(':') && !value.startsWith('0x')) {
+    return value;
+  }
+
+  // Infer type from value
+  if (value.startsWith('0x')) {
+    return `address:${value}`;
+  }
+  if (value === 'true' || value === 'false') {
+    return `bool:${value}`;
+  }
+  if (/^\d+$/.test(value)) {
+    return `u64:${value}`;
+  }
+  // Vector/array format
+  if (value.startsWith('[') && value.endsWith(']')) {
+    return value; // Pass through, CLI handles it
+  }
+  // String
+  return `string:${value}`;
+}
+
+/**
  * Check if an override is a coin balance override
  */
 function isCoinBalanceOverride(override: StateOverride): boolean {
@@ -393,6 +422,11 @@ export async function runSessionSimulation(
     '--assume-yes',
   ];
 
+  // Add private key for signing (required for entry function simulation)
+  if (request.privateKey) {
+    args.push('--private-key', request.privateKey);
+  }
+
   // Add type arguments
   if (request.typeArguments && request.typeArguments.length > 0) {
     for (const typeArg of request.typeArguments) {
@@ -400,10 +434,10 @@ export async function runSessionSimulation(
     }
   }
 
-  // Add function arguments
+  // Add function arguments (formatted for CLI: type:value)
   if (request.arguments && request.arguments.length > 0) {
     for (const arg of request.arguments) {
-      args.push('--args', arg);
+      args.push('--args', formatCLIArgument(arg));
     }
   }
 
@@ -529,8 +563,17 @@ export async function runSimulationWithOverrides(
       console.log('[SimSession] Override results:', overrideResults);
     }
 
-    // Run simulation
-    const result = await runSessionSimulation(session, request);
+    // Get simulation account credentials from environment
+    const simulationPrivateKey = process.env.SIMULATION_ACCOUNT_PRIVATE_KEY;
+    const simulationAddress = process.env.SIMULATION_ACCOUNT_ADDRESS;
+
+    // Run simulation with private key for signing
+    const result = await runSessionSimulation(session, {
+      ...request,
+      // Use simulation account if no private key provided (CLI requires signing)
+      sender: request.privateKey ? request.sender : (simulationAddress || request.sender),
+      privateKey: request.privateKey || simulationPrivateKey,
+    });
 
     return {
       ...result,

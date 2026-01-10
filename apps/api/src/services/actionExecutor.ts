@@ -188,10 +188,11 @@ export class ActionExecutor {
 
         // Find and call the handler function
         // Use __userHandler to avoid conflicts with user-defined 'handler' function
-        const __userHandler = exports.default || exports.handler || module.exports.default || module.exports.handler;
+        // Support: default export, 'handler', or 'run' named exports
+        const __userHandler = exports.default || exports.handler || exports.run || module.exports.default || module.exports.handler || module.exports.run;
 
         if (typeof __userHandler !== 'function') {
-          throw new Error('No handler function exported. Export a default function or named "handler".');
+          throw new Error('No handler function exported. Export a default function or named "handler" or "run".');
         }
 
         // Execute handler with context

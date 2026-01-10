@@ -2,6 +2,17 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Network, SimulationRequest, SimulationResponse, StateOverride } from '@movewatch/shared';
 
+// Argument field info from function signature
+export interface ArgumentFieldInfo {
+  index: number;
+  name: string;
+  type: string;
+  inputType: 'text' | 'number' | 'boolean' | 'address' | 'array' | 'object';
+  placeholder: string;
+  description: string;
+  required: boolean;
+}
+
 // Demo preset definition
 export interface DemoPreset {
   id: string;
@@ -34,6 +45,8 @@ interface SimulatorState {
   functionName: string;
   typeArguments: string[];
   argumentsJson: string;
+  argumentValues: string[]; // Individual argument values
+  argumentFields: ArgumentFieldInfo[]; // Argument field metadata from function signature
   maxGasAmount: number;
   gasUnitPrice: number;
   sender: string;
@@ -46,6 +59,9 @@ interface SimulatorState {
   // What-if scenarios
   whatIfEnabled: boolean;
   gasMultiplier: number;
+
+  // Detailed trace (CLI profiling)
+  detailedTrace: boolean;
 
   // Validation
   isValid: boolean;
@@ -64,6 +80,9 @@ interface SimulatorState {
   removeTypeArgument: (index: number) => void;
   setTypeArgument: (index: number, value: string) => void;
   setArgumentsJson: (json: string) => void;
+  setArgumentFields: (fields: ArgumentFieldInfo[]) => void;
+  setArgumentValue: (index: number, value: string) => void;
+  syncArgumentsFromValues: () => void;
   setMaxGasAmount: (amount: number) => void;
   setGasUnitPrice: (price: number) => void;
   setSender: (address: string) => void;
@@ -80,6 +99,9 @@ interface SimulatorState {
   setWhatIfEnabled: (enabled: boolean) => void;
   setGasMultiplier: (multiplier: number) => void;
   applyWhatIfScenario: (scenario: WhatIfScenario) => void;
+
+  // Detailed trace actions
+  setDetailedTrace: (enabled: boolean) => void;
 
   setResult: (result: SimulationResponse | null) => void;
   setLoading: (loading: boolean) => void;
@@ -99,6 +121,8 @@ const initialState = {
   functionName: 'transfer',
   typeArguments: ['0x1::aptos_coin::AptosCoin'],
   argumentsJson: '["0x0000000000000000000000000000000000000000000000000000000000000001", "1000000"]',
+  argumentValues: [] as string[],
+  argumentFields: [] as ArgumentFieldInfo[],
   maxGasAmount: 100000,
   gasUnitPrice: 100,
   sender: '',
@@ -111,6 +135,9 @@ const initialState = {
   // What-if scenarios
   whatIfEnabled: false,
   gasMultiplier: 1,
+
+  // Detailed trace (CLI profiling)
+  detailedTrace: false,
 
   isValid: true,
   errors: {},
@@ -255,6 +282,47 @@ export const useSimulatorStore = create<SimulatorState>()(
         get().validate();
       },
 
+      setArgumentFields: (argumentFields) => {
+        // Initialize argument values array when fields change
+        const argumentValues = argumentFields.map(() => '');
+        set({ argumentFields, argumentValues });
+      },
+
+      setArgumentValue: (index, value) => {
+        set((state) => {
+          const newValues = [...state.argumentValues];
+          newValues[index] = value;
+          return { argumentValues: newValues };
+        });
+        // Sync to JSON
+        get().syncArgumentsFromValues();
+      },
+
+      syncArgumentsFromValues: () => {
+        const state = get();
+        if (state.argumentFields.length === 0) return;
+
+        // Convert individual values to proper types based on field info
+        const args = state.argumentValues.map((value, index) => {
+          const field = state.argumentFields[index];
+          if (!field || !value) return value;
+
+          // Convert based on type
+          if (field.type.startsWith('u') && !field.type.includes('vector')) {
+            // Numeric types (u8, u64, u128, etc.) - keep as string for large numbers
+            return value;
+          }
+          if (field.type === 'bool') {
+            return value.toLowerCase() === 'true';
+          }
+          // Default: keep as string (addresses, vectors, etc.)
+          return value;
+        });
+
+        set({ argumentsJson: JSON.stringify(args, null, 2) });
+        get().validate();
+      },
+
       setMaxGasAmount: (maxGasAmount) => set({ maxGasAmount }),
       setGasUnitPrice: (gasUnitPrice) => set({ gasUnitPrice }),
       setSender: (sender) => set({ sender: sender.toLowerCase() }),
@@ -286,6 +354,9 @@ export const useSimulatorStore = create<SimulatorState>()(
           // Balance overrides would be added to stateOverrides
         }));
       },
+
+      // Detailed trace actions
+      setDetailedTrace: (detailedTrace) => set({ detailedTrace }),
 
       setResult: (result) => set({ result }),
       setLoading: (isLoading) => set({ isLoading }),
@@ -371,12 +442,23 @@ export const useSimulatorStore = create<SimulatorState>()(
           }
         }
 
+        // Add detailed trace option if enabled
+        if (state.detailedTrace) {
+          request.options = {
+            ...request.options,
+            detailed_trace: true,
+          };
+        }
+
         return request;
       },
 
       reset: () =>
         set({
           ...initialState,
+          // Reset argument fields
+          argumentFields: [],
+          argumentValues: [],
           // Reset fork options
           forkEnabled: false,
           ledgerVersion: '',
@@ -384,6 +466,8 @@ export const useSimulatorStore = create<SimulatorState>()(
           // Reset what-if options
           whatIfEnabled: false,
           gasMultiplier: 1,
+          // Reset detailed trace
+          detailedTrace: false,
           result: null,
           isLoading: false,
         }),

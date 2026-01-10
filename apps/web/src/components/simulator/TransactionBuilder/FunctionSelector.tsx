@@ -22,6 +22,34 @@ interface ModuleSuggestion {
   isPopular?: boolean;
 }
 
+// Helper to determine input type based on Move type
+function getInputTypeForMoveType(moveType: string): 'text' | 'number' | 'boolean' | 'address' | 'array' | 'object' {
+  const type = moveType.toLowerCase();
+  if (type === 'address' || type.includes('address')) return 'address';
+  if (type === 'bool') return 'boolean';
+  if (type.startsWith('u') && !type.includes('vector')) return 'number';
+  if (type.includes('vector') || type.includes('[]')) return 'array';
+  if (type.includes('struct') || type.includes('{')) return 'object';
+  return 'text';
+}
+
+// Helper to get placeholder text based on Move type
+function getPlaceholderForType(moveType: string): string {
+  const type = moveType.toLowerCase();
+  if (type === 'address' || type.includes('address')) return '0x1...';
+  if (type === 'bool') return 'true or false';
+  if (type === 'u8') return '0-255';
+  if (type === 'u16') return '0-65535';
+  if (type === 'u32') return '0-4294967295';
+  if (type === 'u64') return '0 (e.g., 1000000)';
+  if (type === 'u128') return '0';
+  if (type === 'u256') return '0';
+  if (type.includes('vector<u8>')) return '0x... (hex bytes)';
+  if (type.includes('vector')) return '["item1", "item2"]';
+  if (type.includes('string') || type === '0x1::string::String') return 'Enter text...';
+  return 'Enter value...';
+}
+
 export function FunctionSelector() {
   const {
     network,
@@ -33,6 +61,7 @@ export function FunctionSelector() {
     setFunctionName,
     setArgumentsJson,
     setTypeArgument,
+    setArgumentFields: setStoreArgumentFields,
     errors,
   } = useSimulatorStore();
 
@@ -43,7 +72,7 @@ export function FunctionSelector() {
   const [accountModules, setAccountModules] = useState<string[]>([]);
   const [functions, setFunctions] = useState<FunctionInfo[]>([]);
   const [selectedFunction, setSelectedFunction] = useState<FunctionInfo | null>(null);
-  const [argumentFields, setArgumentFields] = useState<ArgumentField[]>([]);
+  const [localArgumentFields, setLocalArgumentFields] = useState<ArgumentField[]>([]);
   const [isLoadingModules, setIsLoadingModules] = useState(false);
   const [isLoadingFunctions, setIsLoadingFunctions] = useState(false);
   const [showFunctionDropdown, setShowFunctionDropdown] = useState(false);
@@ -52,6 +81,8 @@ export function FunctionSelector() {
   const moduleInputRef = useRef<HTMLInputElement>(null);
   const moduleNameInputRef = useRef<HTMLInputElement>(null);
   const functionInputRef = useRef<HTMLInputElement>(null);
+  const moduleNameContainerRef = useRef<HTMLDivElement>(null);
+  const functionContainerRef = useRef<HTMLDivElement>(null);
 
   // Load popular modules on mount
   useEffect(() => {
@@ -107,14 +138,27 @@ export function FunctionSelector() {
   const loadFunctionDetails = useCallback(async (address: string, module: string, func: string) => {
     if (!address || !module || !func) {
       setSelectedFunction(null);
-      setArgumentFields([]);
+      setLocalArgumentFields([]);
+      setStoreArgumentFields([]);
       return;
     }
 
     const details = await getFunctionDetails(network, address, module, func);
     if (details) {
       setSelectedFunction(details.function);
-      setArgumentFields(details.argumentFields);
+      setLocalArgumentFields(details.argumentFields);
+
+      // Update store with argument field info for ArgumentsEditor
+      // The API's ArgumentField already has the fields we need
+      setStoreArgumentFields(details.argumentFields.map((field, index) => ({
+        index,
+        name: field.name,
+        type: field.type,
+        inputType: field.inputType || getInputTypeForMoveType(field.type),
+        placeholder: field.placeholder || getPlaceholderForType(field.type),
+        description: field.description || `Argument ${index + 1}`,
+        required: field.required ?? true,
+      })));
 
       // Auto-populate type arguments if the function has type parameters
       if (details.function.typeParameters > 0) {
@@ -126,7 +170,7 @@ export function FunctionSelector() {
         }
       }
     }
-  }, [network]);
+  }, [network, setStoreArgumentFields]);
 
   // Handle module address input change
   const handleAddressChange = (value: string) => {
@@ -191,10 +235,11 @@ export function FunctionSelector() {
       if (!moduleInputRef.current?.contains(e.target as Node)) {
         setShowModuleSuggestions(false);
       }
-      if (!moduleNameInputRef.current?.parentElement?.contains(e.target as Node)) {
+      // Use container refs to properly detect clicks inside dropdowns
+      if (!moduleNameContainerRef.current?.contains(e.target as Node)) {
         setShowModuleDropdown(false);
       }
-      if (!functionInputRef.current?.parentElement?.contains(e.target as Node)) {
+      if (!functionContainerRef.current?.contains(e.target as Node)) {
         setShowFunctionDropdown(false);
       }
     };
@@ -284,7 +329,7 @@ export function FunctionSelector() {
       {/* Module Name & Function Name (side by side) */}
       <div className="grid grid-cols-2 gap-4">
         {/* Module Name with Dropdown */}
-        <div className="space-y-2 relative">
+        <div ref={moduleNameContainerRef} className="space-y-2 relative">
           <label htmlFor="moduleName" className="block text-sm font-medium text-dark-300">
             Module Name
           </label>
@@ -337,7 +382,7 @@ export function FunctionSelector() {
         </div>
 
         {/* Function Name with Dropdown */}
-        <div className="space-y-2 relative">
+        <div ref={functionContainerRef} className="space-y-2 relative">
           <label htmlFor="functionName" className="block text-sm font-medium text-dark-300">
             Function Name
           </label>
@@ -441,9 +486,9 @@ export function FunctionSelector() {
           {selectedFunction.description && (
             <p className="text-xs text-dark-400">{selectedFunction.description}</p>
           )}
-          {argumentFields.length > 0 && (
+          {localArgumentFields.length > 0 && (
             <div className="text-xs text-dark-500">
-              {argumentFields.length} argument{argumentFields.length !== 1 ? 's' : ''} required
+              {localArgumentFields.length} argument{localArgumentFields.length !== 1 ? 's' : ''} required
             </div>
           )}
         </div>

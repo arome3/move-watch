@@ -28,6 +28,17 @@ import {
   stopBalanceChecker,
   getBalanceCheckerStatus,
 } from './services/balanceChecker.js';
+import {
+  startNotificationWorker,
+  recoverProcessingJobs,
+  getQueueStats,
+} from './services/notificationQueue.js';
+import {
+  dequeueExecution,
+  processExecution,
+  completeJob,
+  getQueueStats as getActionQueueStats,
+} from './services/actionProcessor.js';
 
 const app: Application = express();
 const PORT = process.env.PORT || 4000;
@@ -265,6 +276,67 @@ server.listen(PORT, async () => {
     const balanceStatus = getBalanceCheckerStatus();
     console.log(`[Startup] Balance checker started (interval: ${balanceStatus.intervalMs}ms)`);
 
+    // Start notification worker to process queued notifications
+    console.log('[Startup] Starting notification worker...');
+    const recoveredJobs = await recoverProcessingJobs();
+    if (recoveredJobs > 0) {
+      console.log(`[Startup] Recovered ${recoveredJobs} stuck notification jobs`);
+    }
+    // Start worker in background (don't await - it runs forever)
+    startNotificationWorker().catch((error) => {
+      console.error('[NotificationWorker] Fatal error:', error);
+    });
+    const queueStats = await getQueueStats();
+    console.log(`[Startup] Notification worker started (pending: ${queueStats.pending}, dead: ${queueStats.deadLetter})`);
+
+    // Start inline action worker to process queued action executions
+    console.log('[Startup] Starting action worker...');
+    const WORKER_CONCURRENCY = parseInt(process.env.WORKER_CONCURRENCY || '2', 10);
+    let actionWorkerRunning = true;
+
+    // Simple inline action worker loop
+    const actionWorkerLoop = async (workerId: number) => {
+      console.log(`[ActionWorker] Worker ${workerId} started`);
+      while (actionWorkerRunning) {
+        try {
+          const job = await dequeueExecution(5); // 5 second timeout
+          if (job) {
+            console.log(`[ActionWorker] Worker ${workerId} processing job ${job.jobId}`);
+            try {
+              await processExecution(job);
+            } catch (error) {
+              console.error(`[ActionWorker] Job ${job.jobId} failed:`, error);
+            } finally {
+              await completeJob(job);
+            }
+          } else {
+            // No job available, wait before polling again to prevent busy-wait
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        } catch (error) {
+          if (actionWorkerRunning) {
+            console.error(`[ActionWorker] Worker ${workerId} error:`, error);
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        }
+      }
+    };
+
+    // Start worker loops (don't await - they run forever)
+    for (let i = 0; i < WORKER_CONCURRENCY; i++) {
+      actionWorkerLoop(i + 1).catch((error) => {
+        console.error(`[ActionWorker] Worker ${i + 1} fatal error:`, error);
+      });
+    }
+
+    const actionQueueStats = await getActionQueueStats();
+    console.log(`[Startup] Action worker started (${WORKER_CONCURRENCY} workers, pending: ${actionQueueStats.pending})`);
+
+    // Store shutdown handler for action worker
+    (global as unknown as { stopActionWorker: () => void }).stopActionWorker = () => {
+      actionWorkerRunning = false;
+    };
+
     console.log('[Startup] All background services started successfully');
   } catch (error) {
     console.error('[Startup] Error starting background services:', error);
@@ -287,6 +359,11 @@ const shutdown = async (signal: string) => {
   // Stop balance checker
   console.log('[Shutdown] Stopping balance checker...');
   stopBalanceChecker();
+
+  // Stop action worker
+  console.log('[Shutdown] Stopping action worker...');
+  const stopActionWorker = (global as unknown as { stopActionWorker?: () => void }).stopActionWorker;
+  if (stopActionWorker) stopActionWorker();
 
   // Close HTTP server
   server.close(() => {

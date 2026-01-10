@@ -8,9 +8,11 @@ export function GasOptions() {
     maxGasAmount,
     gasUnitPrice,
     sender,
+    detailedTrace,
     setMaxGasAmount,
     setGasUnitPrice,
     setSender,
+    setDetailedTrace,
     errors,
   } = useSimulatorStore();
 
@@ -80,6 +82,49 @@ export function GasOptions() {
       <p className="text-xs text-dark-500">
         These values affect gas estimation. Default values work for most simulations.
       </p>
+
+      {/* Detailed Trace Toggle */}
+      <div className="pt-4 border-t border-dark-800">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-dark-300">
+                Detailed Execution Trace
+              </span>
+              <span className="px-1.5 py-0.5 text-[10px] bg-purple-500/20 text-purple-400 rounded">
+                CLI
+              </span>
+            </div>
+            <p className="text-xs text-dark-500 mt-1">
+              Get per-instruction gas profiling using Aptos CLI
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDetailedTrace(!detailedTrace)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-900 ${
+              detailedTrace ? 'bg-primary-500' : 'bg-dark-700'
+            }`}
+            role="switch"
+            aria-checked={detailedTrace}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                detailedTrace ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+
+        {detailedTrace && (
+          <div className="mt-3 bg-purple-500/10 border border-purple-500/30 rounded-lg px-3 py-2">
+            <p className="text-[11px] text-purple-400/90">
+              <strong>Real trace mode enabled.</strong> Results will show actual per-instruction gas usage
+              from the Move VM. Requires Aptos CLI on the server.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

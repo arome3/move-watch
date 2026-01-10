@@ -72,7 +72,9 @@ export async function queueExecution(
   // Push to queue (FIFO - add to left, pop from right)
   await redis.lpush(EXECUTION_QUEUE_KEY, JSON.stringify(job));
 
-  console.log(`[ActionProcessor] Queued execution ${executionId} for action ${actionId}`);
+  // Debug: Check queue length immediately after push
+  const queueLen = await redis.llen(EXECUTION_QUEUE_KEY);
+  console.log(`[ActionProcessor] Queued execution ${executionId} for action ${actionId} (queue now has ${queueLen} jobs)`);
   return executionId;
 }
 
@@ -83,6 +85,13 @@ export async function queueExecution(
 export async function dequeueExecution(
   _timeoutSeconds: number = 30
 ): Promise<ExecutionJob | null> {
+  // Check queue length for debugging
+  const queueLen = await redis.llen(EXECUTION_QUEUE_KEY);
+  // Only log when there are jobs to avoid noise
+  if (queueLen > 0) {
+    console.log(`[ActionProcessor] Dequeue attempt, queue has ${queueLen} jobs`);
+  }
+
   // LMOVE: atomically move from pending to processing
   // right from source (oldest), left to destination (newest)
   const result = await redis.lmove(
@@ -93,6 +102,9 @@ export async function dequeueExecution(
   );
 
   if (!result) {
+    if (queueLen > 0) {
+      console.log(`[ActionProcessor] LMOVE returned null despite queue having ${queueLen} jobs`);
+    }
     return null; // No jobs available
   }
 

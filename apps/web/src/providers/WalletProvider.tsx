@@ -13,10 +13,17 @@ export function WalletProvider({ children }: WalletProviderProps) {
     <AptosWalletAdapterProvider
       autoConnect={false}
       dappConfig={{
-        network: Network.MAINNET,
+        network: Network.TESTNET,
+        aptosConnect: undefined,
       }}
+      // Only allow standard wallets (Petra, Pontem, etc) - no SDK wallets
+      // SDK wallets like AptosConnectGoogleWallet try to fetch chain info on init
+      // which fails because we're using Movement Network, not Aptos
+      plugins={[]}
       onError={(error) => {
-        console.error('Wallet error:', error);
+        // Silently handle wallet initialization errors
+        // These are expected when using Movement Network instead of Aptos
+        console.debug('Wallet error (suppressed):', error?.message);
       }}
     >
       {children}

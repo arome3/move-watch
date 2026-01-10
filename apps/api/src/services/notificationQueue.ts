@@ -292,7 +292,11 @@ export async function startNotificationWorker(
 
   while (!signal?.aborted) {
     try {
-      await processNextNotification();
+      const job = await processNextNotification();
+      // If no job was processed, wait before polling again to prevent busy-wait
+      if (!job) {
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Poll every 1 second
+      }
     } catch {
       // Error already logged in processNextNotification
       // Brief pause before next attempt

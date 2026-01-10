@@ -220,7 +220,7 @@ router.get('/check/:shareId', async (req, res, next) => {
  *   total: number
  * }
  */
-router.get('/patterns', requireAuth, async (_req: AuthenticatedRequest, res, next) => {
+router.get('/patterns', async (_req, res, next) => {
   try {
     const patterns = getPatternSummary();
 
@@ -246,7 +246,7 @@ router.get('/patterns', requireAuth, async (_req: AuthenticatedRequest, res, nex
  *   total: number
  * }
  */
-router.get('/demo', requireAuth, async (_req: AuthenticatedRequest, res, next) => {
+router.get('/demo', async (_req, res, next) => {
   try {
     const transactions = getDemoTransactions();
 

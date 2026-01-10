@@ -410,7 +410,16 @@ export const useActionsStore = create<ActionsState>()((set, get) => ({
     try {
       await actionsApi.setSecret(actionId, { name, value });
       const secrets = await actionsApi.getSecrets(actionId);
-      set({ secrets, isSavingSecret: false });
+      const secretNames = secrets.map((s) => s.name);
+
+      // Update both secrets array and selectedAction.secretNames to keep in sync
+      set((s) => ({
+        secrets,
+        isSavingSecret: false,
+        selectedAction: s.selectedAction?.id === actionId
+          ? { ...s.selectedAction, secretNames }
+          : s.selectedAction,
+      }));
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : 'Failed to save secret',
@@ -425,9 +434,16 @@ export const useActionsStore = create<ActionsState>()((set, get) => ({
 
     try {
       await actionsApi.deleteSecret(actionId, name);
+      // Update both secrets array and selectedAction.secretNames to keep in sync
       set((s) => ({
         secrets: s.secrets.filter((sec) => sec.name !== name),
         isSavingSecret: false,
+        selectedAction: s.selectedAction?.id === actionId
+          ? {
+              ...s.selectedAction,
+              secretNames: s.selectedAction.secretNames.filter((n) => n !== name),
+            }
+          : s.selectedAction,
       }));
     } catch (error) {
       set({

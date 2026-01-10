@@ -52,6 +52,13 @@ import { analyzeWithAI, type AIAnalysisResult } from './aiAnalyzer.js';
 import { runAgenticAnalysis, quickAgentCheck } from './agenticAnalyzer.js';
 import { matchExploitSignaturesCached, semanticMatchesToIssues, quickSemanticCheck } from './semanticMatcher.js';
 
+// Framework whitelist - skip most analysis for known-safe functions
+import {
+  checkWhitelist,
+  createWhitelistedResponse,
+  isNeverWhitelisted,
+} from './frameworkWhitelist.js';
+
 import type { DetectedIssue, PatternMatchResult } from './types.js';
 import {
   CACHE_TTL_SECONDS,
@@ -132,6 +139,104 @@ export async function analyzeTransaction(
         }
       : undefined
   );
+
+  // 2.1. EARLY EXIT: Check if this is a known-safe framework function
+  // Skip heavy analysis for standard functions like 0x1::coin::transfer
+  const whitelistCheck = checkWhitelist(
+    analysisData.moduleAddress,
+    analysisData.moduleName,
+    analysisData.functionBaseName
+  );
+
+  // Only apply whitelist if function is not in the "never whitelist" list
+  const shouldApplyWhitelist =
+    whitelistCheck.isWhitelisted &&
+    !isNeverWhitelisted(analysisData.moduleName, analysisData.functionBaseName);
+
+  if (shouldApplyWhitelist) {
+    console.log(`[Guardian] Whitelisted function: ${request.functionName} - ${whitelistCheck.reason}`);
+
+    const whitelistedResult = createWhitelistedResponse(
+      analysisData.moduleAddress,
+      analysisData.moduleName,
+      analysisData.functionBaseName,
+      whitelistCheck
+    );
+
+    const totalMs = Date.now() - startTime;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + RESULT_TTL_DAYS);
+
+    // Store minimal result in database
+    const guardianCheck = await prisma.guardianCheck.create({
+      data: {
+        shareId,
+        userId,
+        network: request.network.toUpperCase() as 'MAINNET' | 'TESTNET' | 'DEVNET',
+        sender: request.sender,
+        functionName: request.functionName,
+        typeArguments: request.typeArguments,
+        arguments: request.arguments as Prisma.InputJsonValue,
+        simulationId: simulationResult?.id,
+        overallRisk: whitelistedResult.overallRisk,
+        riskScore: whitelistedResult.riskScore,
+        patternMatchMs: totalMs,
+        llmAnalysisMs: undefined,
+        usedLlm: false,
+        simulationStatus: apiSimulationStatusToDb(simulationStatus),
+        simulationError,
+        llmStatus: 'SKIPPED',
+        warnings: [] as unknown as Prisma.InputJsonValue,
+        expiresAt,
+        issues: {
+          create: whitelistedResult.issues.map((issue) => ({
+            category: issue.category,
+            severity: issue.severity,
+            title: issue.title,
+            description: issue.description,
+            recommendation: issue.recommendation,
+            patternId: issue.patternId,
+            evidence: issue.evidence as Prisma.InputJsonValue,
+            confidence: issue.confidence,
+            source: issue.source,
+          })),
+        },
+      },
+      include: {
+        issues: true,
+      },
+    });
+
+    // Cache for sharing
+    await cacheGuardianCheck(shareId, guardianCheck);
+
+    // Return early with safe result
+    return formatCheckResponse(
+      guardianCheck,
+      totalMs,
+      totalMs,
+      undefined,
+      simulationStatus,
+      simulationError,
+      'skipped',
+      [],
+      true,
+      {
+        status: 'verified',
+        moduleExists: true,
+        functionExists: true,
+        verifiedOnChain: true,
+        metadata: {
+          totalFunctions: 0, // Framework module - not fetched
+          entryFunctions: 0,
+          hasResourceAbilities: false,
+          friendModules: [],
+          isFrameworkModule: true,
+          whitelistReason: whitelistCheck.reason,
+        },
+      }
+    );
+  }
 
   // 2.5. Run bytecode analysis (verify on-chain module and function)
   let bytecodeVerification: GuardianBytecodeVerification;
