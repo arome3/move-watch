@@ -1,14 +1,7 @@
 # Build stage
-# Pinning Node 18.18.0 for isolated-vm V8 compatibility
-# Recent Node patches (18.20+, 20.19+) have V8 SourceLocation API changes
-FROM node:18.18.0-slim AS builder
-
-# Install build dependencies for native modules (isolated-vm)
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+# Using full Node image for better native module compilation support
+# isolated-vm requires specific V8 API compatibility
+FROM node:18.17.0 AS builder
 
 # Install pnpm
 RUN npm install -g pnpm@8.15.0
@@ -41,7 +34,7 @@ RUN pnpm --filter @movewatch/shared build
 RUN pnpm --filter @movewatch/api build
 
 # Production stage
-FROM node:18.18.0-slim AS runner
+FROM node:18.17.0-slim AS runner
 
 # Install runtime dependencies for isolated-vm, Prisma, and Aptos CLI
 RUN apt-get update && apt-get install -y \

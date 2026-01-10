@@ -227,6 +227,8 @@ export async function analyzeTransaction(
         functionExists: true,
         verifiedOnChain: true,
         metadata: {
+          moduleAddress: analysisData.moduleAddress,
+          moduleName: analysisData.moduleName,
           totalFunctions: 0, // Framework module - not fetched
           entryFunctions: 0,
           hasResourceAbilities: false,

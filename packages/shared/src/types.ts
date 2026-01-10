@@ -1226,6 +1226,8 @@ export interface GuardianBytecodeVerification {
     entryFunctions: number;
     hasResourceAbilities: boolean;
     friendModules: string[];
+    isFrameworkModule?: boolean;
+    whitelistReason?: string;
   };
   functionInfo?: {
     name: string;
