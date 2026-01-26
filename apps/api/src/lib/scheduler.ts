@@ -18,7 +18,7 @@ const runningNetworks: Set<Network> = new Set();
 const refreshIntervals: Map<Network, ReturnType<typeof setInterval>> = new Map();
 
 // How often to refresh schedules from database (5 minutes)
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const REFRESH_INTERVAL_MS = 15 * 60 * 1000;
 
 /**
  * Validate a cron expression

@@ -20,8 +20,8 @@ import { getNotificationConfig } from './channelConfigService.js';
 import type { NotificationPayload, Network } from '@movewatch/shared';
 
 // Configuration
-const BALANCE_CHECK_INTERVAL_MS = 30000; // 30 seconds
-const BALANCE_CACHE_TTL_SECONDS = 15; // Cache balance for 15 seconds
+const BALANCE_CHECK_INTERVAL_MS = 300000; // 5 minutes
+const BALANCE_CACHE_TTL_SECONDS = 120; // Cache balance for 2 minutes
 const BALANCE_CACHE_PREFIX = 'cache:balance:';
 
 // Track running state

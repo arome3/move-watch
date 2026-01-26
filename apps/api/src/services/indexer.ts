@@ -6,7 +6,7 @@ import { processEvent as processActionEvent, processBlock as processActionBlock 
 import { recordTransaction } from './metricsService.js';
 
 // Configuration
-const POLLING_INTERVAL_MS = 5000; // 5 seconds
+const POLLING_INTERVAL_MS = 60000; // 60 seconds
 const LAST_PROCESSED_KEY_PREFIX = 'indexer:lastProcessedVersion:';
 const LAST_PROCESSED_BLOCK_KEY_PREFIX = 'indexer:lastProcessedBlock:';
 const MAX_TRANSACTIONS_PER_POLL = 100;
